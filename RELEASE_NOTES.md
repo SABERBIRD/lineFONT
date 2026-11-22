@@ -1,7 +1,12 @@
-# lineFONT 0.0.2
+# lineFONT release notes
 
-- Clarifies the linefont/1 stroke model, metrics, Unicode coverage and fallback.
-- Includes reference layout vectors with explicit stroke order, UTF-16 ranges and numerical tolerance.
-- Adds the `linefont-preview` CLI for printable SVG specimens, with a 4 mm sample and enlarged glyph cards with guides and anchors.
+## 0.0.2 (unreleased)
 
-The file format stays at `linefont/1`.
+- Adds the `linefont/0.0.2` file format for absolute quadratic Béziers (Q/T), smooth cubic Béziers (S) and circular or elliptical arcs (A), alongside M/L/C. Existing `linefont/1` files remain readable. [Curve example](examples/Curves.lint)
+- Can convert a font or lay out text using M/L/C or only M/L, with a caller-specified tolerance. The original font retains its authored paths.
+- Clarifies stroke order, metrics, Unicode coverage and fallback. Adds reference layout vectors with UTF-16 ranges and numerical tolerances, a JSON Schema and structured validation diagnostics.
+- Adds printable SVG specimens and an offline HTML font preview with glyph inspection, font comparison and language coverage.
+
+## 0.0.1
+
+Initial release of the `linefont/1` format, layout engine and two bagLING fonts. This file format uses absolute M/L/C stroke commands. [Published release and downloads](https://github.com/SABERBIRD/lineFONT/releases/tag/v0.0.1)
