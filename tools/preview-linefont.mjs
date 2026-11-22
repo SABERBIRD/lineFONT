@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile, stat } from "node:fs/promises";
 import { layout, parseFont } from "../dist/index.js";
+import { htmlPreview } from "./preview-html.mjs";
 
 const escapeXml = (value) =>
   String(value)
@@ -57,9 +58,10 @@ function glyphCard(font, key, index) {
     ? `<path transform="translate(${px(0)} ${py(0)}) scale(${number(scale)})" d="${path(commands)}" fill="none" stroke="#142b35" stroke-width="${number(0.36 / scale)}"/>`
     : "";
   const bounds = result.bounds;
-  const frame =
+  const frame = `<rect class="glyph-reference-frame" x="${px(0)}" y="${py(0)}" width="${number((font.metrics.defaultAdvance || capHeight) * scale)}" height="${number(capHeight * scale)}" stroke="#9a5a16" stroke-width=".25" fill="none"/>`;
+  const layoutBounds =
     glyph?.fontIndex === 0
-      ? `<rect class="glyph-layout-bounds" x="${px(bounds.x)}" y="${py(bounds.y)}" width="${number(bounds.width * scale)}" height="${number(bounds.height * scale)}" stroke="#9a5a16" stroke-width=".2" stroke-dasharray="1 .7" fill="none"/>`
+      ? `<rect class="glyph-layout-bounds" display="none" x="${px(bounds.x)}" y="${py(bounds.y)}" width="${number(bounds.width * scale)}" height="${number(bounds.height * scale)}" stroke="#72499d" stroke-width=".25" stroke-dasharray="1 .7" fill="none"/>`
       : "";
   const overflow =
     glyph?.fontIndex === 0 &&
@@ -84,7 +86,7 @@ function glyphCard(font, key, index) {
     <svg x="0" y="5" width="38" height="19.5" viewBox="0 5 38 19.5" overflow="hidden">
       ${line(2, py(0), 36, py(0), "#9eafb7")}${line(2, py(capHeight), 36, py(capHeight), "#376a91")}
       ${line(px(0), 5, px(0), 24.5, "#9eafb7")}${line(px(advance), 5, px(advance), 24.5, "#267351")}
-      ${frame}${outline}${points}
+      ${frame}${layoutBounds}${outline}${points}
     </svg>
     ${!glyph || glyph.fontIndex === null ? text(2, 26.5, "Unresolved in text layout", 2.2) : overflow ? text(2, 26.5, "Extends beyond card", 2.2) : ""}
   </g>`;
@@ -143,15 +145,18 @@ function specimen(font, sample, page) {
   `
       : ""
   }
-  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · layout bounds")}
+  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · reference frame")}
   <g transform="translate(0 ${cardTop})">${shown.map((key, index) => glyphCard(font, key, index)).join("\n")}</g>
 </svg>\n`;
 }
 
-const [file, sample = "", page = "1", ...extra] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const interactive = args[0] === "--html";
+if (interactive) args.shift();
+const [file, sample = "", page = "1", ...extra] = args;
 if (!file || extra.length) {
   console.error(
-    "Usage: linefont-preview font.lint [sample text] [page] > specimen.svg",
+    "Usage: linefont-preview [--html] font.lint [sample text] [page]",
   );
   process.exitCode = 2;
 } else {
@@ -160,8 +165,10 @@ if (!file || extra.length) {
       throw Error("Font file exceeds 8 MB");
     if (sample.length > 500)
       throw Error("Sample exceeds 500 UTF-16 code units");
+    const font = parseFont(await readFile(file, "utf8"));
+    const sheet = specimen(font, interactive ? "" : sample, Number(page));
     process.stdout.write(
-      specimen(parseFont(await readFile(file, "utf8")), sample, Number(page)),
+      interactive ? await htmlPreview(font, sample, sheet) : sheet,
     );
   } catch (error) {
     console.error(

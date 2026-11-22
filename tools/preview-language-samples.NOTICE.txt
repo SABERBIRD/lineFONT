@@ -1,0 +1,9 @@
+Language profiles adapted from Google Fonts Languages by Google LLC and contributors.
+Source: https://github.com/googlefonts/lang/tree/4b64a18f91a921287147d7dca95671f00a59e9ca
+License: Apache-2.0. See LICENSES/Apache-2.0.txt.
+The upstream source includes per-language sample provenance and contributor credits.
+
+lineFONT filtered to Latin, Cyrillic and Greek, selected short samples,
+flattened alphabet exemplars, and added technical phrases for English, Ukrainian
+and Greek. To regenerate from the pinned upstream checkout, run:
+python3 tools/import-language-samples.py /path/to/lang > tools/preview-language-samples.json
