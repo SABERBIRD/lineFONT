@@ -1,16 +1,46 @@
 # lineFONT
 
-lineFONT specifies the `.lint` format for single-line vector fonts and provides a text layout engine for technical drawings, plotting and engraving. The engine returns strokes and metrics in caller-defined units.
+lineFONT lays out single-line vector fonts for technical drawings, plotters and engraving. Give the engine text, an ordered font stack and a cap height in your units. It returns pen strokes, metrics and caret positions for your application to draw.
 
-See the [format specification](spec/FORMAT.md), [integration guide](spec/INTEGRATION.md) and [contribution guide](CONTRIBUTING.md). Releases include an npm-installable package and native build artifacts. [GitHub Releases](https://github.com/SABERBIRD/lineFONT/releases)
+| I want to… | Start here |
+| --- | --- |
+| Use lineFONT in an application | [Install the library and run a JS, Rust or C example](docs/integration.md) |
+| Create or contribute a font | [Choose a starter glyph, edit it and validate the font](docs/font-authors.md) |
+| View a font | [Generate a printable SVG or an interactive offline HTML preview](docs/preview.md) (0.0.2 checkout) |
 
-The [Ukrainian and English font](fonts/bagLING-UA-EN/) and the [Greek letters font](fonts/bagLING-Greek-Letters/) were created with AI assistance for bagLING. They are usable in the editor and provide reference examples for font authors.
+## Which version do I need?
 
-The engine, bindings and tools are MIT. The specification, documentation, example font and bundled fonts are CC BY 4.0, credited to SABERBIRD. Preserve the license link and credit, and indicate changes when redistributing them. Third-party terms are in [THIRD_PARTY.txt](THIRD_PARTY.txt). [MIT](LICENSE) · [CC BY 4.0](LICENSES/CC-BY-4.0.txt)
+| Package | Accepted `.lint` format identifiers | Available features |
+| --- | --- | --- |
+| [0.0.1 release](https://github.com/SABERBIRD/lineFONT/releases/tag/v0.0.1) | `linefont/1` | Layout with M/L/C strokes, validator, two bundled fonts |
+| 0.0.2 (unreleased checkout) | `linefont/1`, `linefont/0.0.2` | Also supports Q/T/S/A curves, polyline output, coverage reports and the preview CLI |
 
-Use the `linefont-preview` CLI to generate an SVG specimen or an offline HTML preview with language samples, a 4 mm text sample, and enlarged glyph cards. [Preview instructions](spec/INTEGRATION.md#inspect-a-font) · [Reference layout cases](examples/conformance/)
+A font's own `version` describes the artwork. Its `format` selects the file syntax. [Release notes](RELEASE_NOTES.md) · [Format specification](spec/FORMAT.md) · [Roadmap](ROADMAP.md)
 
-The development format `linefont/0.0.2` adds SVG Q/T, S and A to the original
-M/L/C profile. Applications can keep the authored paths, request a compatible
-whole font, or place text as polylines at a chosen tolerance.
-[Curve example](examples/Curves.lint) · [JSON Schema](spec/linefont.schema.json) · [Geometry API](spec/INTEGRATION.md#geometry-profiles-in-the-development-version)
+## First layout in JavaScript
+
+Install the released package with Node 22.12 or newer. Run the following JavaScript as an ES module.
+
+```sh
+npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.1/saberbird-linefont-0.0.1.tgz
+```
+
+```js
+import { layout } from "@saberbird/linefont";
+import font from "@saberbird/linefont/fonts/bagling-ua-en";
+
+const fonts = [font];
+const result = layout(fonts, {
+  text: "Ґрунт / Ground",
+  height: 4,
+  lineHeight: 7.2,
+  top: 1.2,
+});
+console.log(result.glyphs.length, result.missing); // 14 []
+```
+
+Each glyph's `commands` contains its placed strokes. The same layout can drive a screen renderer and a vector export. [Runnable example](examples/integration/layout.mjs)
+
+## Fonts and licensing
+
+The [Ukrainian and English font](fonts/bagLING-UA-EN/README.md) and [Greek letters font](fonts/bagLING-Greek-Letters/README.md) were created with AI assistance for bagLING. Code uses MIT. Specification, documentation, example font and bundled fonts use CC BY 4.0, credited to SABERBIRD. Preserve the credit and license link and indicate changes when redistributing them. [MIT](LICENSE) · [CC BY 4.0](LICENSES/CC-BY-4.0.txt) · [Third-party notices](THIRD_PARTY.txt)

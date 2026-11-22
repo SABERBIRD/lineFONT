@@ -209,7 +209,7 @@ See [contributing to this standard](CONTRIBUTIONS.md).
 Нульовий радіус дає відрізок, збіг кінцевих точок пропускає дугу. Коло має
 рівні радіуси. Для повного оберту потрібні щонайменше дві дуги.
 
-[Приклад шрифту](../examples/Curves.lint) · [Профілі виводу й допуск](INTEGRATION.md#geometry-profiles-in-the-development-version)
+[Приклад шрифту](../examples/Curves.lint) · [Профілі виводу й допуск](../docs/integration.md#geometry-profiles-in-the-development-version)
 
 [JSON Schema для обох версій](linefont.schema.json) описує структуру, ключі Unicode,
 метрики та взаємовиключні способи побудови гліфа. Ядро додатково перевіряє
