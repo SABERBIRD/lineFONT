@@ -42,6 +42,7 @@
     "LICENSES/",
     "THIRD_PARTY.txt",
     "tools/preview-*.mjs",
+    "tools/preview.css",
     "tools/preview-language-samples.*"
   ],
   "scripts": {

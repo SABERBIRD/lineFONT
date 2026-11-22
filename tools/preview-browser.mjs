@@ -76,6 +76,15 @@ const saveSvg = document.getElementById("save-svg");
 const missingPanel = document.getElementById("missing-panel");
 const missingSymbols = document.getElementById("missing-symbols");
 let previewFrame;
+function formatCluster(cluster) {
+  const codes = Array.from(
+    cluster,
+    (char) =>
+      "U+" + char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"),
+  ).join(" ");
+  return `${cluster} (${codes})`;
+}
+
 function paintSample(image, result, screenScale) {
   const { x, y, width, height } = result.bounds;
   image.setAttribute("width", `${(width + 4) * screenScale}px`);
@@ -144,35 +153,10 @@ function renderPhrase() {
       paintSample(comparisonPreview, other, screenScale);
       comparisonCoverage.textContent = other.missing.length
         ? "Missing from second font · " +
-          other.missing
-            .map(
-              (cluster) =>
-                cluster +
-                " (" +
-                Array.from(
-                  cluster,
-                  (char) =>
-                    "U+" +
-                    char
-                      .codePointAt(0)
-                      .toString(16)
-                      .toUpperCase()
-                      .padStart(4, "0"),
-                ).join(" ") +
-                ")",
-            )
-            .join(", ")
+          other.missing.map(formatCluster).join(", ")
         : "All characters in this sample are supported.";
     }
-    const missing = result.missing.map((cluster) => {
-      const codes = Array.from(
-        cluster,
-        (char) =>
-          "U+" +
-          char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0"),
-      ).join(" ");
-      return `${cluster} (${codes})`;
-    });
+    const missing = result.missing.map(formatCluster);
     missingSymbols.value = missing.join("\n");
     missingPanel.hidden = missing.length === 0;
     saveSvg.disabled = false;
@@ -277,46 +261,59 @@ nextPage.addEventListener("click", () => {
   currentPage++;
   renderGlyphs();
 });
-let fileRequest = 0;
-document
-  .getElementById("font-file")
-  .addEventListener("change", async (event) => {
-    const request = ++fileRequest;
-    const file = event.target.files[0];
+function bindFontInput(id, status, errorLabel, apply) {
+  const input = document.getElementById(id);
+  let revision = 0;
+  input.addEventListener("change", async () => {
+    const request = ++revision;
+    const file = input.files[0];
     if (!file) return;
-    fontStatus.textContent = "Opening " + file.name;
+    status.textContent = "Opening " + file.name;
     try {
       if (file.size > 8_000_000) throw Error("Font file exceeds 8 MB");
       const source = await file.text();
-      if (request !== fileRequest) return;
-      const candidate = getRuntime().parseFont(source);
-      const sheet = specimen(candidate, "", 1);
-      font = candidate;
-      fonts = [font];
-      glyphSearch.value = "";
-      currentPage = 1;
-      glyphSheet.innerHTML = sheet;
-      document.getElementById("font-name").textContent = font.name;
-      document.getElementById("font-metrics").textContent =
-        font.version +
-        " · cap height " +
-        font.metrics.capHeight +
-        " · baseline " +
-        font.metrics.baseline +
-        " · default advance " +
-        font.metrics.defaultAdvance;
-      updateGlyphControls();
-      populateDetails();
-      renderPhrase();
-      fontStatus.textContent = "Opened " + file.name;
+      if (request !== revision) return;
+      status.textContent = apply(getRuntime().parseFont(source), file);
     } catch (error) {
-      if (request !== fileRequest) return;
-      fontStatus.textContent = "Cannot open font · " + error.message;
-      renderPhrase();
+      if (request !== revision) return;
+      status.textContent = errorLabel + error.message;
     } finally {
-      if (request === fileRequest) event.target.value = "";
+      if (request === revision) {
+        input.value = "";
+        renderPhrase();
+      }
     }
   });
+  return () => {
+    revision++;
+  };
+}
+bindFontInput(
+  "font-file",
+  fontStatus,
+  "Cannot open font · ",
+  (candidate, file) => {
+    const sheet = specimen(candidate, "", 1);
+    font = candidate;
+    fonts = [font];
+    glyphSearch.value = "";
+    currentPage = 1;
+    glyphSheet.innerHTML = sheet;
+    document.getElementById("font-name").textContent = font.name;
+    document.getElementById("font-metrics").textContent =
+      font.version +
+      " · cap height " +
+      font.metrics.capHeight +
+      " · baseline " +
+      font.metrics.baseline +
+      " · default advance " +
+      font.metrics.defaultAdvance;
+    updateGlyphControls();
+    populateDetails();
+
+    return "Opened " + file.name;
+  },
+);
 updateGlyphControls();
 
 const detailGlyph = document.getElementById("detail-glyph");
@@ -405,37 +402,20 @@ glyphSheet.addEventListener("keydown", (event) => {
   }
 });
 populateDetails();
-let compareRequest = 0;
-document
-  .getElementById("compare-file")
-  .addEventListener("change", async (event) => {
-    const request = ++compareRequest;
-    const file = event.target.files[0];
-    if (!file) return;
-    compareStatus.textContent = "Opening " + file.name;
-    try {
-      if (file.size > 8_000_000) throw Error("Font file exceeds 8 MB");
-      const source = await file.text();
-      if (request !== compareRequest) return;
-      const candidate = getRuntime().parseFont(source);
-      compareFont = candidate;
-      compareFonts = [candidate];
-      document.getElementById("comparison-name").textContent = candidate.name;
-      clearComparison.disabled = false;
-      renderPhrase();
-      compareStatus.textContent =
-        "Comparing with " + candidate.name + " · " + candidate.version;
-    } catch (error) {
-      if (request !== compareRequest) return;
-      compareStatus.textContent =
-        "Cannot open comparison font · " + error.message;
-      renderPhrase();
-    } finally {
-      if (request === compareRequest) event.target.value = "";
-    }
-  });
+const cancelCompareLoad = bindFontInput(
+  "compare-file",
+  compareStatus,
+  "Cannot open comparison font · ",
+  (candidate) => {
+    compareFont = candidate;
+    compareFonts = [candidate];
+    document.getElementById("comparison-name").textContent = candidate.name;
+    clearComparison.disabled = false;
+    return "Comparing with " + candidate.name + " · " + candidate.version;
+  },
+);
 clearComparison.addEventListener("click", () => {
-  compareRequest++;
+  cancelCompareLoad();
   compareFont = null;
   compareFonts = [];
   clearComparison.disabled = true;
