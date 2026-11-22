@@ -1,0 +1,63 @@
+{
+  "format": "linefont/1",
+  "geometryTolerance": 0.00000001,
+  "cases": [
+    {
+      "name": "canonical composition, empty space, fallback, pen moves and missing cluster",
+      "fonts": ["primary.lint", "fallback.lint"],
+      "request": { "text": "Ї ЇB😀", "height": 10, "lineHeight": 18, "top": 0 },
+      "expected": {
+        "missing": ["😀"],
+        "caretsX": [0, 8, 12, 12, 20, 28, 28, 36],
+        "glyphs": [
+          {
+            "range": [0, 1],
+            "fontIndex": 0,
+            "advance": 8,
+            "commands": [
+              ["M", 2, 0],
+              ["L", 2, 10],
+              ["M", 1, -2],
+              ["L", 3, -2]
+            ]
+          },
+          { "range": [1, 2], "fontIndex": 0, "advance": 4, "commands": [] },
+          {
+            "range": [2, 4],
+            "fontIndex": 0,
+            "advance": 8,
+            "commands": [
+              ["M", 14, 0],
+              ["L", 14, 10],
+              ["M", 13, -2],
+              ["L", 15, -2]
+            ]
+          },
+          {
+            "range": [4, 5],
+            "fontIndex": 1,
+            "advance": 8,
+            "commands": [
+              ["M", 20, 0],
+              ["L", 22, 2],
+              ["M", 24, 1],
+              ["C", 25, 1, 26, 2, 27, 3]
+            ]
+          },
+          {
+            "range": [5, 7],
+            "fontIndex": null,
+            "advance": 8,
+            "commands": [
+              ["M", 28, 0],
+              ["L", 34, 0],
+              ["L", 34, 10],
+              ["L", 28, 10],
+              ["L", 28, 0]
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

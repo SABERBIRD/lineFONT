@@ -1,0 +1,14 @@
+{
+  "format": "linefont/1",
+  "id": "SABERBIRD/conformance-fallback",
+  "name": "Conformance fallback",
+  "version": "1",
+  "authors": ["SABERBIRD"],
+  "license": "CC-BY-4.0",
+  "style": "upright",
+  "metrics": { "capHeight": 10, "baseline": 10, "defaultAdvance": 8 },
+  "glyphs": {
+    "0042": { "d": "M0 0 L2 2 M4 1 C5 1 6 2 7 3" },
+    "0407": { "d": "M0 0 L0 10" }
+  }
+}

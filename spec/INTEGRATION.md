@@ -1,9 +1,9 @@
 # Integration
 
-Install the first release in a Node or browser bundler project.
+Install the versioned release in a Node or browser bundler project.
 
 ```sh
-npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.1/saberbird-linefont-0.0.1.tgz
+npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.2/saberbird-linefont-0.0.2.tgz
 ```
 
 ```ts
@@ -35,3 +35,14 @@ npm run font:validate -- examples/SingleGlyph.lint
 ```
 
 The Rust build normalizes local paths for reproducible WASM bytes. The font generator and its sources live in this repository. Use `npm pack` to create the distribution package.
+
+## Inspect a font
+
+Generate an SVG specimen from an installed package. The optional last argument
+selects a page of 40 explicit glyphs. The sample uses a 4 mm cap height at
+actual print size. Enlarged cards show the advance, baseline, control bounds
+and declared anchors. The sample lists missing Unicode clusters.
+
+```sh
+npx --no-install linefont-preview font.lint 'Ґрунт / Ground 0123' 1 > specimen.svg
+```

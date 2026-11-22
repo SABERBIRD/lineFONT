@@ -1,25 +1,56 @@
 {
   "name": "@saberbird/linefont",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Single-line vector fonts and text layout for linefont/1",
   "license": "MIT AND CC-BY-4.0",
   "type": "module",
-  "engines": { "node": ">=22.12.0" },
-  "repository": { "type": "git", "url": "git+https://github.com/SABERBIRD/lineFONT.git" },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SABERBIRD/lineFONT.git"
+  },
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./fonts/bagling-ua-en": { "types": "./bindings/js/bagling-font.d.mts", "default": "./bindings/js/bagling-font.mjs" },
-    "./fonts/bagling-greek-letters": { "types": "./bindings/js/greek-font.d.mts", "default": "./bindings/js/greek-font.mjs" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./fonts/bagling-ua-en": {
+      "types": "./bindings/js/bagling-font.d.mts",
+      "default": "./bindings/js/bagling-font.mjs"
+    },
+    "./fonts/bagling-greek-letters": {
+      "types": "./bindings/js/greek-font.d.mts",
+      "default": "./bindings/js/greek-font.mjs"
+    },
     "./fonts/bagLING-UA-EN.lint": "./fonts/bagLING-UA-EN/bagLING-UA-EN.lint",
     "./fonts/bagLING-Greek-Letters.lint": "./fonts/bagLING-Greek-Letters/bagLING-Greek-Letters.lint"
   },
-  "bin": { "linefont-validate": "./tools/validate-linefont.mjs" },
-  "files": ["dist/", "bindings/js/*font.*", "fonts/*/*.lint", "fonts/*/README.md", "examples/", "spec/", "tools/validate-linefont.mjs", "LICENSES/", "THIRD_PARTY.txt"],
+  "bin": {
+    "linefont-validate": "./tools/validate-linefont.mjs",
+    "linefont-preview": "./tools/preview-linefont.mjs"
+  },
+  "files": [
+    "dist/",
+    "bindings/js/*font.*",
+    "fonts/*/*.lint",
+    "fonts/*/README.md",
+    "examples/",
+    "spec/",
+    "tools/validate-linefont.mjs",
+    "LICENSES/",
+    "THIRD_PARTY.txt",
+    "tools/preview-linefont.mjs"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node tools/copy-wasm.mjs",
     "test": "node --test tests/*.test.mjs",
     "font:validate": "node tools/validate-linefont.mjs",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "font:preview": "node tools/preview-linefont.mjs"
   },
-  "devDependencies": { "typescript": "5.9.3" }
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
 }

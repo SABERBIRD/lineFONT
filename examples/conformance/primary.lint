@@ -1,0 +1,15 @@
+{
+  "format": "linefont/1",
+  "id": "SABERBIRD/conformance-primary",
+  "name": "Conformance primary",
+  "version": "1",
+  "authors": ["SABERBIRD"],
+  "license": "CC-BY-4.0",
+  "style": "upright",
+  "metrics": { "capHeight": 10, "baseline": 10, "defaultAdvance": 8 },
+  "glyphs": {
+    "0020": { "d": "", "advance": 4 },
+    "0308": { "d": "M-1 -1 L1 -1", "advance": 0, "attach": { "x": 0, "y": 0 } },
+    "0406": { "d": "M2 0 L2 10", "anchors": { "top": { "x": 2, "y": -1 } } }
+  }
+}

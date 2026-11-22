@@ -1,6 +1,6 @@
 # Roadmap
 
-- Glyph preview with metrics and example text for font authors.
+- Extend the SVG specimen tool with searchable interactive glyph inspection.
 - SVG importer and authoring templates.
 - More language bindings and integration examples.
 - Profiling large texts and font collections.

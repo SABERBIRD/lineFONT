@@ -7,3 +7,5 @@ See the [format specification](spec/FORMAT.md), [integration guide](spec/INTEGRA
 The [Ukrainian and English font](fonts/bagLING-UA-EN/) and the [Greek letters font](fonts/bagLING-Greek-Letters/) were created with AI assistance for bagLING. They are usable in the editor and provide reference examples for font authors.
 
 The engine, bindings and tools are MIT. The specification, documentation, example font and bundled fonts are CC BY 4.0, credited to SABERBIRD. Preserve the license link and credit, and indicate changes when redistributing them. Third-party terms are in [THIRD_PARTY.txt](THIRD_PARTY.txt). [MIT](LICENSE) · [CC BY 4.0](LICENSES/CC-BY-4.0.txt)
+
+Use the `linefont-preview` CLI to generate an SVG specimen with a 4 mm sample and enlarged glyph cards. [Preview instructions](spec/INTEGRATION.md#inspect-a-font) · [Reference layout cases](examples/conformance/)
