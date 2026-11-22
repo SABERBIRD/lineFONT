@@ -188,7 +188,7 @@ test(
     });
     assert(
       await evaluate(
-        'document.querySelector("noscript").getBoundingClientRect().height > 0',
+        'document.querySelector("#script-status").getBoundingClientRect().height > 0',
       ),
     );
     assert(await evaluate('!!document.querySelector("#glyph-sheet svg")'));

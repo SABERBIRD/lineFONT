@@ -443,3 +443,5 @@ clearComparison.addEventListener("click", () => {
   document.getElementById("compare-file").focus();
   renderPhrase();
 });
+
+document.getElementById("script-status").hidden = true;

@@ -104,7 +104,7 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
   #glyph-sheet > svg { margin-top: 8px; }
   pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
-<noscript><p role="alert">Interactive previews require JavaScript. Open this downloaded HTML in a browser with JavaScript enabled. The glyph sheet remains available below.</p></noscript>
+<p id="script-status" role="status">Interactive previews require JavaScript. Open this downloaded HTML in a browser with JavaScript enabled. The glyph sheet is available below.</p>
 <section aria-label="Sample">
   <h1 id="font-name">${escapeXml(font.name)}</h1>
   <label for="font-file">Open a local .lint font</label>
