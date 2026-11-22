@@ -7,6 +7,13 @@ const {
 } = JSON.parse(document.getElementById("preview-data").textContent);
 let font = initialFont;
 let fonts = [font];
+let compareFont = null;
+let compareFonts = [];
+const comparison = document.getElementById("comparison");
+const comparisonPreview = document.getElementById("comparison-preview");
+const comparisonCoverage = document.getElementById("comparison-coverage");
+const compareStatus = document.getElementById("compare-status");
+const clearComparison = document.getElementById("clear-comparison");
 const languageSelect = document.getElementById("language");
 const sampleInput = document.getElementById("sample");
 const sampleKind = document.getElementById("sample-kind");
@@ -69,9 +76,32 @@ const saveSvg = document.getElementById("save-svg");
 const missingPanel = document.getElementById("missing-panel");
 const missingSymbols = document.getElementById("missing-symbols");
 let previewFrame;
+function paintSample(image, result, screenScale) {
+  const { x, y, width, height } = result.bounds;
+  image.setAttribute("width", `${(width + 4) * screenScale}px`);
+  image.setAttribute("height", `${(height + 4) * screenScale}px`);
+  image.setAttribute("viewBox", `${x - 2} ${y - 2} ${width + 4} ${height + 4}`);
+  const strokes = document.createElementNS(image.namespaceURI, "path");
+  strokes.setAttribute(
+    "d",
+    result.glyphs
+      .flatMap((glyph) => glyph.commands)
+      .map(({ code, values }) => code + values.join(" "))
+      .join(" "),
+  );
+  strokes.setAttribute("fill", "none");
+  strokes.setAttribute("stroke", "currentColor");
+  strokes.setAttribute("stroke-width", ".22");
+  strokes.setAttribute("stroke-linecap", "round");
+  strokes.setAttribute("stroke-linejoin", "round");
+  image.append(strokes);
+}
+
 function renderPhrase() {
   const input = sampleInput.value;
   phrasePreview.replaceChildren();
+  comparisonPreview.replaceChildren();
+  comparison.hidden = true;
   saveSvg.disabled = true;
   missingPanel.hidden = true;
   missingSymbols.value = "";
@@ -94,7 +124,7 @@ function renderPhrase() {
       throw Error("Choose a capital height from 12 to 96 px.");
     }
     const screenScale = pixels / 4;
-    const result = getRuntime().layout(fonts, {
+    const options = {
       text: input,
       height: 4,
       lineHeight: 7,
@@ -105,31 +135,35 @@ function renderPhrase() {
       ),
       top: 0,
       style: font.style,
-    });
-    const { x, y, width, height } = result.bounds;
-    phrasePreview.setAttribute("width", `${(width + 4) * screenScale}px`);
-    phrasePreview.setAttribute("height", `${(height + 4) * screenScale}px`);
-    phrasePreview.setAttribute(
-      "viewBox",
-      `${x - 2} ${y - 2} ${width + 4} ${height + 4}`,
-    );
-    const strokes = document.createElementNS(
-      phrasePreview.namespaceURI,
-      "path",
-    );
-    strokes.setAttribute(
-      "d",
-      result.glyphs
-        .flatMap((glyph) => glyph.commands)
-        .map(({ code, values }) => code + values.join(" "))
-        .join(" "),
-    );
-    strokes.setAttribute("fill", "none");
-    strokes.setAttribute("stroke", "currentColor");
-    strokes.setAttribute("stroke-width", ".22");
-    strokes.setAttribute("stroke-linecap", "round");
-    strokes.setAttribute("stroke-linejoin", "round");
-    phrasePreview.append(strokes);
+    };
+    const result = getRuntime().layout(fonts, options);
+    paintSample(phrasePreview, result, screenScale);
+    comparison.hidden = !compareFont;
+    if (compareFont) {
+      const other = getRuntime().layout(compareFonts, options);
+      paintSample(comparisonPreview, other, screenScale);
+      comparisonCoverage.textContent = other.missing.length
+        ? "Missing from second font · " +
+          other.missing
+            .map(
+              (cluster) =>
+                cluster +
+                " (" +
+                Array.from(
+                  cluster,
+                  (char) =>
+                    "U+" +
+                    char
+                      .codePointAt(0)
+                      .toString(16)
+                      .toUpperCase()
+                      .padStart(4, "0"),
+                ).join(" ") +
+                ")",
+            )
+            .join(", ")
+        : "All characters in this sample are supported.";
+    }
     const missing = result.missing.map((cluster) => {
       const codes = Array.from(
         cluster,
@@ -226,6 +260,7 @@ function renderGlyphs() {
   updateGlyphControls();
   try {
     glyphSheet.innerHTML = specimen(font, "", currentPage, glyphSearch.value);
+    activateCards();
   } catch (error) {
     fontStatus.textContent = "Cannot render glyphs · " + error.message;
   }
@@ -271,6 +306,7 @@ document
         " · default advance " +
         font.metrics.defaultAdvance;
       updateGlyphControls();
+      populateDetails();
       renderPhrase();
       fontStatus.textContent = "Opened " + file.name;
     } catch (error) {
@@ -282,3 +318,128 @@ document
     }
   });
 updateGlyphControls();
+
+const detailGlyph = document.getElementById("detail-glyph");
+const detailPanel = document.getElementById("detail-panel");
+const detailImage = document.getElementById("detail-image");
+const detailOptions = document.getElementById("detail-options");
+function activateCards() {
+  for (const card of glyphSheet.querySelectorAll("[data-glyph]")) {
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("role", "button");
+    card.setAttribute("aria-label", "Inspect U+" + card.dataset.glyph);
+  }
+}
+function populateDetails() {
+  detailGlyph.replaceChildren(new Option("Choose a glyph", ""));
+  for (const key of matchingGlyphs(font)) {
+    detailGlyph.append(
+      new Option(
+        "U+" + key + " · " + String.fromCodePoint(Number.parseInt(key, 16)),
+        key,
+      ),
+    );
+  }
+  detailPanel.hidden = true;
+  detailImage.replaceChildren();
+  activateCards();
+}
+function renderDetail() {
+  const key = detailGlyph.value;
+  detailPanel.hidden = !key;
+  if (!key) return;
+  try {
+    const options = Object.fromEntries(
+      Array.from(detailOptions.querySelectorAll("input"), (input) => [
+        input.name,
+        input.checked,
+      ]),
+    );
+    detailImage.innerHTML = glyphDetail(font, key, options);
+    const definition = font.glyphs[key];
+    const resolved = getRuntime().layout(fonts, {
+      text: String.fromCodePoint(Number.parseInt(key, 16)),
+      height: font.metrics.capHeight,
+      lineHeight: font.metrics.capHeight,
+      top: 0,
+      style: font.style,
+    });
+    document.getElementById("detail-metrics").textContent =
+      "U+" +
+      key +
+      " · advance " +
+      (resolved.glyphs[0]?.advance ??
+        definition.advance ??
+        font.metrics.defaultAdvance) +
+      " · baseline " +
+      font.metrics.baseline +
+      (definition.alias ? " · alias U+" + definition.alias : "") +
+      (definition.composite
+        ? " · composite " +
+          definition.composite.map((part) => "U+" + part.code).join(" + ")
+        : "");
+    document.getElementById("detail-status").textContent =
+      resolved.glyphs[0]?.fontIndex === 0
+        ? ""
+        : "This glyph could not be resolved in text layout.";
+  } catch (error) {
+    detailImage.replaceChildren();
+    document.getElementById("detail-status").textContent = error.message;
+  }
+}
+detailGlyph.addEventListener("change", renderDetail);
+detailOptions.addEventListener("change", renderDetail);
+function inspectCard(event) {
+  const card = event.target.closest("[data-glyph]");
+  if (!card) return;
+  detailGlyph.value = card.dataset.glyph;
+  renderDetail();
+  detailGlyph.focus();
+}
+glyphSheet.addEventListener("click", inspectCard);
+glyphSheet.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    if (!event.target.closest("[data-glyph]")) return;
+    event.preventDefault();
+    inspectCard(event);
+  }
+});
+populateDetails();
+let compareRequest = 0;
+document
+  .getElementById("compare-file")
+  .addEventListener("change", async (event) => {
+    const request = ++compareRequest;
+    const file = event.target.files[0];
+    if (!file) return;
+    compareStatus.textContent = "Opening " + file.name;
+    try {
+      if (file.size > 8_000_000) throw Error("Font file exceeds 8 MB");
+      const source = await file.text();
+      if (request !== compareRequest) return;
+      const candidate = getRuntime().parseFont(source);
+      compareFont = candidate;
+      compareFonts = [candidate];
+      document.getElementById("comparison-name").textContent = candidate.name;
+      clearComparison.disabled = false;
+      renderPhrase();
+      compareStatus.textContent =
+        "Comparing with " + candidate.name + " · " + candidate.version;
+    } catch (error) {
+      if (request !== compareRequest) return;
+      compareStatus.textContent =
+        "Cannot open comparison font · " + error.message;
+      renderPhrase();
+    } finally {
+      if (request === compareRequest) event.target.value = "";
+    }
+  });
+clearComparison.addEventListener("click", () => {
+  compareRequest++;
+  compareFont = null;
+  compareFonts = [];
+  clearComparison.disabled = true;
+  compareStatus.textContent = "";
+  document.getElementById("compare-file").focus();
+  renderPhrase();
+});

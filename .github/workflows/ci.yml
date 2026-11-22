@@ -32,6 +32,14 @@ jobs:
       - run: git diff --exit-code
       - run: npm run build
       - run: npm test
+      - uses: browser-actions/setup-chrome@v1
+        id: chrome
+        with:
+          chrome-version: stable
+      - name: Check offline preview in Chrome
+        env:
+          CHROME_BIN: ${{ steps.chrome.outputs.chrome-path }}
+        run: node --test tests/browser/*.test.mjs
       - run: npm run font:validate -- fonts/*/*.lint examples/*.lint examples/conformance/*.lint
       - run: npm pack
       - name: Check installation of the packed package

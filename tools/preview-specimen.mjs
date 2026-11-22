@@ -97,7 +97,7 @@ function glyphCard(font, geometry, key, index) {
     .join("");
   const rect = `<rect x="0" y="0" width="38" height="28" rx="1" fill="#fff" stroke="#b5c4ca" stroke-width=".2"/>`;
   const label = `U+${key} · advance ${number(advance)}`;
-  return `<g transform="translate(${x} ${y})">${rect}${text(2, 4, label, 2.6)}
+  return `<g data-glyph="${key}" transform="translate(${x} ${y})">${rect}${text(2, 4, label, 2.6)}
     <svg x="0" y="5" width="38" height="19.5" viewBox="0 5 38 19.5" overflow="hidden">
       ${line(2, py(0), 36, py(0), "#9eafb7")}${line(2, py(capHeight), 36, py(capHeight), "#376a91")}
       ${line(px(0), 5, px(0), 24.5, "#9eafb7")}${line(px(advance), 5, px(advance), 24.5, "#267351")}

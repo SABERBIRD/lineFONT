@@ -79,3 +79,22 @@ keep the previous font available. The file limit is 8 MB.
 Glyph cards support page navigation and filtering by a literal character or a
 hexadecimal code, such as Ґ, 0490, or U+0490. The same renderer generates the CLI
 SVG and the browser cards, including their stroke bounds and shared baseline.
+
+Select a glyph using **Inspect a glyph**, click its card, or focus its card and
+press Enter or Space. The enlarged view has independent switches for strokes
+and bounds, direction arrows, control points, advance guides, and anchors.
+The blue horizontal guide is the baseline; coordinates follow the layout’s
+cap-top coordinate system. Alias and composite metadata appear beside the view.
+
+Use **Compare with another .lint font** to load a second font independently.
+Both samples use the same text, cap height, line height, wrap width, and the
+primary font’s requested style. Each font reports its own missing clusters.
+Samples are laid out independently. Invalid replacement files keep
+the last valid comparison. **Download sample SVG** saves the primary sample.
+
+Controls provide visible keyboard focus and touch targets of at least 44 CSS px.
+Glyph sheets scroll within their own region on narrow screens; browser zoom is
+enabled. A static message remains visible when scripts are disabled. The current
+CI browser check exercises a 320 px touch viewport and a desktop viewport in Chrome.
+Real-device Android and iOS file selection, zoom, clipboard, and SVG download
+remain pending physical verification.
