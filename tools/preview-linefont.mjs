@@ -1,25 +1,8 @@
 #!/usr/bin/env node
 import { readFile, stat } from "node:fs/promises";
 import { layout, parseFont } from "../dist/index.js";
-import { htmlPreview } from "./preview-html.mjs";
+import { escapeXml, htmlPreview } from "./preview-html.mjs";
 
-const escapeXml = (value) =>
-  String(value)
-    .replace(
-      /[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu,
-      "�",
-    )
-    .replace(
-      /[&<>"']/g,
-      (char) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&apos;",
-        })[char],
-    );
 const number = (value) => Number(value.toPrecision(10));
 const path = (commands) =>
   commands

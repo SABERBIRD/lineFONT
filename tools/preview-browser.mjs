@@ -1,5 +1,5 @@
-// Appended to the compiled lineFONT binding by preview-html.mjs.
-const { font, sample, catalog, credits } = JSON.parse(
+// Inlined by preview-html.mjs.
+const { font, sample, samples } = JSON.parse(
   document.getElementById("preview-data").textContent,
 );
 const fonts = [font];
@@ -8,32 +8,8 @@ const sampleInput = document.getElementById("sample");
 const sampleKind = document.getElementById("sample-kind");
 const phrasePreview = document.getElementById("phrase-preview");
 const coverage = document.getElementById("coverage");
-const samplesById = new Map();
-
-document.getElementById("font-name").textContent = font.name;
-document.getElementById("notices").textContent = credits;
-for (const [script, label] of [
-  ["Latn", "Latin"],
-  ["Cyrl", "Cyrillic"],
-  ["Grek", "Greek"],
-]) {
-  const group = document.createElement("optgroup");
-  group.label = label;
-  for (const preset of catalog.samples.filter(
-    (entry) => entry.script === script,
-  )) {
-    const title =
-      preset.autonym &&
-      preset.autonym.toLowerCase() !== preset.name.toLowerCase()
-        ? `${preset.name} · ${preset.autonym}`
-        : preset.name;
-    group.append(
-      new Option(`${title} [${preset.id.replaceAll("_", "-")}]`, preset.id),
-    );
-    samplesById.set(preset.id, preset);
-  }
-  languageSelect.append(group);
-}
+const samplesById = new Map(samples);
+let layoutPreview;
 
 const kindLabels = {
   technical: "Technical phrase",
@@ -54,7 +30,13 @@ function renderPhrase() {
   }
 
   try {
-    const result = layout(fonts, {
+    if (typeof WebAssembly !== "object") {
+      throw Error(
+        "Open the downloaded HTML in a browser with WebAssembly support.",
+      );
+    }
+    layoutPreview ??= loadLayout();
+    const result = layoutPreview(fonts, {
       text: input,
       height: 4,
       lineHeight: 7,
@@ -100,7 +82,7 @@ function renderPhrase() {
       : "All characters in this sample are supported.";
   } catch (error) {
     phrasePreview.setAttribute("hidden", "");
-    coverage.textContent = error.message;
+    coverage.textContent = "Cannot render the sample · " + error.message;
   }
 }
 

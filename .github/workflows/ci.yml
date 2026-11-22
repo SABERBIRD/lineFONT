@@ -54,7 +54,9 @@ jobs:
               assert y <= float(anchor.get("cy")) <= y + height + 1e-6
           PY
           npx --no-install linefont-preview --html node_modules/@saberbird/linefont/examples/conformance/primary.lint > specimen.html
-          test -s specimen.html
+          grep -q '<option value="uk_Cyrl">' specimen.html
+          grep -q '<option value="en_Latn">' specimen.html
+          grep -q '<option value="el_Grek">' specimen.html
           node --input-type=module -e "import { layout } from '@saberbird/linefont'; import font from '@saberbird/linefont/fonts/bagling-ua-en'; if (!layout([font], { text: 'ҐA', height: 4, lineHeight: 7.2, top: 1.2 }).glyphs.length) process.exit(1)"
       - name: Publish verified release assets
         if: github.event_name == 'workflow_dispatch' && inputs.publish && startsWith(github.ref, 'refs/tags/v')

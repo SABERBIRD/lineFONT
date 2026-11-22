@@ -53,7 +53,9 @@ npm run --silent font:preview -- font.lint > specimen.svg
 npm run --silent font:preview -- font.lint 'Sample 0123' 2 > page-2.svg
 ```
 
-For an interactive, offline preview, generate an HTML file and open it in a browser.
+For an interactive, offline preview, generate an HTML file and open it directly in
+a browser with JavaScript and WebAssembly enabled. A file preview that blocks
+scripts can display the glyph cards.
 
 ```sh
 npm run --silent font:preview -- --html fonts/bagLING-UA-EN/bagLING-UA-EN.lint > specimen.html
