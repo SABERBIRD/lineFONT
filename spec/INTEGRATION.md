@@ -3,7 +3,7 @@
 Install the versioned release in a Node or browser bundler project.
 
 ```sh
-npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.2/saberbird-linefont-0.0.2.tgz
+npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.1/saberbird-linefont-0.0.1.tgz
 ```
 
 ```ts
@@ -38,11 +38,16 @@ The Rust build normalizes local paths for reproducible WASM bytes. The font gene
 
 ## Inspect a font
 
-Generate an SVG specimen from an installed package. The optional last argument
-selects a page of 40 explicit glyphs. The sample uses a 4 mm cap height at
-actual print size. Enlarged cards show the advance, baseline, control bounds
-and declared anchors. The sample lists missing Unicode clusters.
+Generate an SVG specimen from a source checkout after running `npm run build`.
+Each page shows up to 40 glyphs at a shared scale with a fixed origin and baseline.
+The dashed outline shows the layout bounds, including the logical advance space.
+A card marks geometry or anchors that extend beyond its visible area.
+
+The optional sample shows the requested text at 4 mm cap height at actual print size
+and lists missing clusters. Omit the sample for a glyph-only sheet. An empty string
+lets you choose another page without adding a sample.
 
 ```sh
-npx --no-install linefont-preview font.lint 'Ґрунт / Ground 0123' 1 > specimen.svg
+npm run --silent font:preview -- font.lint > specimen.svg
+npm run --silent font:preview -- font.lint 'Sample 0123' 2 > page-2.svg
 ```
