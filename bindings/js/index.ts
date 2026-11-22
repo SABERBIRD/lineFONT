@@ -108,6 +108,9 @@ export function rankFonts(fonts: readonly LintFont[], text: string): LintFont[] 
   return request<number[]>({ op: 'rank', text }).map((index) => fonts[index]);
 }
 export function parseFont(source: string): LintFont {
-  if (source.length > 8_000_000) throw Error('Font file is too large');
+  const byteLimit = 8_000_000;
+  if (source.length > byteLimit || (source.length * 3 > byteLimit && encoder.encode(source).length > byteLimit)) {
+    throw Error('Font file is too large');
+  }
   return validateFonts([JSON.parse(source)])[0].font;
 }
