@@ -1,0 +1,13 @@
+{
+  "format": "linefont/1",
+  "id": "author/SingleGlyph",
+  "name": "Single glyph example",
+  "version": "0.1.0",
+  "authors": ["SABERBIRD"],
+  "license": "CC-BY-4.0",
+  "style": "upright",
+  "metrics": { "capHeight": 10, "baseline": 10, "defaultAdvance": 8 },
+  "glyphs": {
+    "0490": { "d": "M1 10 L1 1 L6 1 L6 0", "anchors": { "top": { "x": 3.5, "y": -1 } } }
+  }
+}

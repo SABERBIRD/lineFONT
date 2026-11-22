@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "bindings/js"
+  },
+  "include": ["bindings/js/index.ts", "bindings/js/wasm.d.mts"]
+}
