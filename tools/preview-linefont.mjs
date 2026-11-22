@@ -3,6 +3,8 @@ import { readFile, stat } from "node:fs/promises";
 import { layout, parseFont } from "../dist/index.js";
 import { escapeXml, htmlPreview } from "./preview-html.mjs";
 
+import { inkBounds } from "./preview-ink-bounds.mjs";
+
 const number = (value) => Number(value.toPrecision(10));
 const path = (commands) =>
   commands
@@ -58,19 +60,22 @@ function specimenGeometry(font, keys, shown) {
   const scale = Math.min(12 / capHeight, 32 / width, 17 / height);
   const px = (x) => number(3 + (32 - width * scale) / 2 + (x - left) * scale);
   const py = (y) => number(6.5 + (17 - height * scale) / 2 + (y - top) * scale);
-  const frame = `<rect class="glyph-reference-frame" x="${px(left)}" y="${py(top)}" width="${number(width * scale)}" height="${number(height * scale)}" stroke="#9a5a16" stroke-width=".25" fill="none"/>`;
-  return { visible, scale, px, py, frame };
+  return { visible, scale, px, py };
 }
 
 function glyphCard(font, geometry, key, index) {
   const { capHeight, baseline } = font.metrics;
-  const { visible, scale, px, py, frame } = geometry;
+  const { visible, scale, px, py } = geometry;
   const { glyph, advance, anchors } = visible.get(key);
   const x = 6 + (index % 5) * 40;
   const y = Math.floor(index / 5) * 30;
   const commands = glyph?.fontIndex === 0 ? glyph.commands : [];
   const outline = commands.length
     ? `<path transform="translate(${px(0)} ${py(0)}) scale(${number(scale)})" d="${path(commands)}" fill="none" stroke="#142b35" stroke-width="${number(0.36 / scale)}"/>`
+    : "";
+  const bounds = inkBounds(commands);
+  const frame = bounds
+    ? `<rect class="glyph-ink-bounds" x="${px(bounds.x)}" y="${py(bounds.y)}" width="${number(bounds.width * scale)}" height="${number(bounds.height * scale)}" stroke="#9a5a16" stroke-width=".2" stroke-dasharray=".7 .5" fill="none"/>`
     : "";
   const points = anchors
     .map(
@@ -144,7 +149,7 @@ function specimen(font, sample, page) {
   `
       : ""
   }
-  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · font bounds")}
+  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · stroke bounds")}
   <g transform="translate(0 ${cardTop})">${shown.map((key, index) => glyphCard(font, geometry, key, index)).join("\n")}</g>
 </svg>\n`;
 }

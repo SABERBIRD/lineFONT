@@ -10,6 +10,44 @@ const phrasePreview = document.getElementById("phrase-preview");
 const coverage = document.getElementById("coverage");
 const samplesById = new Map(samples);
 let layoutPreview;
+const languageSearch = document.getElementById("language-search");
+const languageChoices = Array.from(
+  languageSelect.querySelectorAll("optgroup"),
+  (group) => ({
+    label: group.label,
+    options: Array.from(
+      group.options ?? group.querySelectorAll("option"),
+      (option) => ({
+        value: option.value,
+        label: option.textContent,
+      }),
+    ),
+  }),
+);
+const searchKey = (value) =>
+  value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();
+languageSearch.addEventListener("input", () => {
+  const selected = languageSelect.value;
+  const query = searchKey(languageSearch.value.trim());
+  languageSelect.replaceChildren(new Option("Custom text", ""));
+  for (const group of languageChoices) {
+    const matches = group.options.filter((option) =>
+      searchKey(option.label).includes(query),
+    );
+    if (!matches.length) continue;
+    const element = document.createElement("optgroup");
+    element.label = group.label;
+    element.append(
+      ...matches.map((option) => new Option(option.label, option.value)),
+    );
+    languageSelect.append(element);
+  }
+  languageSelect.value = Array.from(languageSelect.options).some(
+    (option) => option.value === selected,
+  )
+    ? selected
+    : "";
+});
 
 const kindLabels = {
   technical: "Technical phrase",
@@ -40,13 +78,16 @@ function renderPhrase() {
       text: input,
       height: 4,
       lineHeight: 7,
-      wrapWidth: 192,
+      wrapWidth: Math.max(
+        20,
+        (document.getElementById("preview-scroll").clientWidth - 24) / 7,
+      ),
       top: 0,
       style: font.style,
     });
     const { x, y, width, height } = result.bounds;
-    phrasePreview.setAttribute("width", `${width + 4}mm`);
-    phrasePreview.setAttribute("height", `${height + 4}mm`);
+    phrasePreview.setAttribute("width", `${(width + 4) * 7}px`);
+    phrasePreview.setAttribute("height", `${(height + 4) * 7}px`);
     phrasePreview.setAttribute(
       "viewBox",
       `${x - 2} ${y - 2} ${width + 4} ${height + 4}`,
@@ -98,5 +139,11 @@ sampleInput.addEventListener("input", () => {
   cancelAnimationFrame(previewFrame);
   previewFrame = requestAnimationFrame(renderPhrase);
 });
+if (typeof ResizeObserver === "function") {
+  new ResizeObserver(() => {
+    cancelAnimationFrame(previewFrame);
+    previewFrame = requestAnimationFrame(renderPhrase);
+  }).observe(document.getElementById("preview-scroll"));
+}
 sampleInput.value = sample;
 renderPhrase();

@@ -40,9 +40,10 @@ The Rust build normalizes local paths for reproducible WASM bytes. The font gene
 
 Generate an SVG specimen from a source checkout after running `npm run build`.
 Each page shows up to 40 glyphs at a shared scale with a fixed origin and baseline.
-The orange frame encloses the font’s layout bounds and anchors across all glyphs,
-including descenders and accents. Every card uses that same frame, scale, origin,
-and baseline across pages. The green line marks each glyph’s own advance.
+The orange outline encloses each glyph’s strokes using exact cubic extrema.
+Advance space, anchors and other glyphs do not enlarge this outline. Empty glyphs
+have no outline. Every card keeps a shared scale, origin and baseline across pages.
+The green line marks each glyph’s own advance.
 
 The optional sample shows the requested text at 4 mm cap height at actual print size
 and lists missing clusters. Omit the sample for a glyph-only sheet. An empty string
@@ -61,9 +62,10 @@ scripts can display the glyph cards.
 npm run --silent font:preview -- --html fonts/bagLING-UA-EN/bagLING-UA-EN.lint > specimen.html
 ```
 
-Choose a Latin, Cyrillic, or Greek language profile to fill the editable sample.
-Profiles from [Google Fonts Languages](https://github.com/googlefonts/lang) use
-a short phrase where available, then alphabet exemplars or the language’s own
-name. Profiles without sample data accept pasted text. The coverage report lists
-missing grapheme clusters in the current sample.
+Search the curated list of 19 Latin, Cyrillic, and Greek language profiles by
+English name, native name, or language identifier. Each profile provides a short
+technical phrase about cutting, width, and angle. Translations are draft samples
+open to corrections from native speakers. Edit the JSON catalog to contribute
+another language. The editable sample reports missing grapheme clusters.
+On screen the cap height is 28 CSS pixels, with wrapping to the available width.
 The installed CLI accepts the same options as `linefont-preview`.

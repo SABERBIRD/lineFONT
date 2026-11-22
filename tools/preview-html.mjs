@@ -73,11 +73,13 @@ export async function htmlPreview(font, sample, sheet) {
   h1 { margin: 0 0 16px; font-size: 1.45rem; }
   section { padding: 16px; background: white; border: 1px solid #b5c4ca; border-radius: 8px; }
   label { font-weight: 600; }
-  select, textarea { display: block; width: 100%; border: 1px solid #778c97; border-radius: 4px; padding: 8px; font: inherit; color: inherit; background: white; }
+  input, select, textarea { display: block; width: 100%; border: 1px solid #778c97; border-radius: 4px; padding: 8px; font: inherit; color: inherit; background: white; }
   textarea { margin-bottom: 12px; resize: vertical; }
   #sample-kind, #coverage { margin: 4px 0 12px; overflow-wrap: anywhere; }
   #phrase-preview, #glyphs > svg { display: block; max-width: 100%; height: auto; }
-  #phrase-preview { margin-bottom: 8px; }
+  #phrase-preview { margin-bottom: 8px; max-width: none; }
+  #preview-scroll { overflow: auto; margin-top: 12px; }
+  #language-search { margin-bottom: 12px; }
   #phrase-preview[hidden] { display: none; }
   #glyphs { margin: 16px 0; }
   #glyphs > svg { margin-top: 8px; }
@@ -85,6 +87,8 @@ export async function htmlPreview(font, sample, sheet) {
 </style>
 <section aria-label="Sample">
   <h1>${escapeXml(font.name)}</h1>
+  <label for="language-search">Find a language</label>
+  <input id="language-search" type="search" placeholder="English, Українська…" autocomplete="off">
   <label for="language">Sample language</label>
   <select id="language">
     <option value="">Custom text</option>
@@ -93,7 +97,7 @@ export async function htmlPreview(font, sample, sheet) {
   <p id="sample-kind"></p>
   <label for="sample">Sample text</label>
   <textarea id="sample" rows="2" maxlength="500" spellcheck="false"></textarea>
-  <svg id="phrase-preview" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sample at 4 mm cap height at 100% print scale"></svg>
+  <div id="preview-scroll"><svg id="phrase-preview" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sample at 4 mm cap height at 100% print scale"></svg></div>
   <p id="coverage" role="status">To render this sample interactively, open the downloaded HTML in a browser with JavaScript enabled.</p>
 </section>
 <section id="glyphs" aria-label="Glyph cards">
