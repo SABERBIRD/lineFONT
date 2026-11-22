@@ -1,7 +1,7 @@
 Linefont third-party notices
 
 This file preserves notices for dependencies bundled in the Rust/WASM core.
-It does not grant a license for bagLING, Linefont itself, or its fonts.
+See LICENSE for lineFONT and LICENSES/CC-BY-4.0.txt for the bundled fonts.
 
 
 ======================================================================

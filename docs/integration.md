@@ -55,9 +55,7 @@ C++ applications can include the same [C ABI header](../core/include/linefont.h)
 Pass the whole visible string and an ordered stack of immutable fonts. The JS
 binding caches the active stack by array identity. To edit a font, replace the
 changed font object and pass a new array. An explicit call to `rankFonts`
-suggests a new order based on occurrences in the text. Import appends to the
-stack so that existing glyphs keep their source. Keep a manually chosen order
-while typing.
+suggests a new order based on occurrences in the text. To keep the current glyph sources when adding a fallback, append it to the stack.
 
 Normalize CRLF and CR to LF before mapping textarea selections or style runs.
 Offsets count UTF-16 code units in that visible string. Interior offsets of a
@@ -70,8 +68,6 @@ commands in object-local coordinates, applying the object transform once.
 `width`, `height` and `lines` describe the logical layout; `bounds` also
 encloses stroke control points. Use the returned carets for editing and the
 same layout for screen rendering, measurements and vector export.
-
-For document storage, style runs and editor conventions in the original host, see the [bagLING integration profile](bagling.md).
 
 ## Native request lifecycle
 

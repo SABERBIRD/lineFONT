@@ -10,10 +10,6 @@ The guides now have separate pages.
 
 [Native requests](../docs/integration.md#native-request-lifecycle)
 
-## bagLING integration profile
-
-[bagLING editor profile](../docs/bagling.md)
-
 ## Inspect a font
 
 [Preview guide](../docs/preview.md)
