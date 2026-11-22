@@ -276,3 +276,10 @@ pre {
     border-top: 1px solid var(--border);
   }
 }
+
+.mast {
+  flex-wrap: wrap;
+}
+#ui-language {
+  width: auto;
+}

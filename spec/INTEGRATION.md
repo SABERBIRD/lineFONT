@@ -172,3 +172,62 @@ enabled. A static message remains visible when scripts are disabled. The current
 CI browser check exercises a 320 px touch viewport and a desktop viewport in Chrome.
 Real-device Android and iOS file selection, zoom, clipboard, and SVG download
 remain pending physical verification.
+
+## Geometry profiles in the development version
+
+Read the original author path from `parseFont(source).glyphs[key].d`. For a
+device working in millimetres, the following places 4 mm capitals and requests
+line segments with a maximum curve approximation error of 0.02 mm.
+
+```ts
+const placed = layout([font], {
+  text: "SΟ", height: 4, lineHeight: 7, top: 0,
+  output: "lines", tolerance: 0.02,
+});
+const box = inkBounds(placed.glyphs.flatMap(glyph => glyph.commands));
+```
+
+Import `inkBounds` from the same package as `layout`. The default output
+profile is `beziers` (M/L/C). Q/T are elevated exactly, S expands exactly, and
+A becomes a sequence of chords. The `lines` profile further subdivides cubic
+segments in placed coordinates. Supply a positive finite tolerance for a
+device-specific error bound. It applies before any host transform. Recalculate
+the tolerance if a downstream transform magnifies the geometry. Without an
+explicit tolerance arcs use the font's cap height / 1000 sampling tolerance.
+The engine rejects requests that exceed its command budget. It preserves move
+commands and stroke order in both profiles.
+
+`inkBounds(commands)` measures extrema of the **returned centerlines**,
+including interior cubic extrema. An empty path or isolated moves return
+`null`. Arcs converted to chords are measured as those chords. Stroke width
+and pen diameter belong to the consumer. The Rust equivalent is
+`linefont::ink_bounds`; C and WASM accept `{"op":"inkBounds","commands":[...]}`.
+
+## Coverage and validation
+
+`coverage(fonts, text)`, Rust `Engine::coverage`, and the native `coverage`
+operation report each distinct original grapheme, its first matching font
+index and its source kind. Kinds are `direct`, `alias`, explicit `composite`,
+anchor-based `composed`, and `missing` (null index). Search uses canonical
+equivalence and the application's fallback order. For a reproducible language
+report including decomposed spellings, run:
+
+```sh
+npm run font:coverage -- uk fonts/bagLING-UA-EN/bagLING-UA-EN.lint
+npm run font:validate -- --json examples/Curves.lint
+```
+
+Native errors include a human-readable `error` and a `diagnostic` object.
+The JS binding exposes the latter on thrown errors. `code` identifies the
+category, `message` explains the problem, and `path` is a JSON Pointer
+relative to the request. `glyph` is the font's Unicode key where applicable.
+`commandIndex` counts parsed source segments from zero, including moves;
+unrelated errors use null. The validator's JSON mode emits one record per
+file (errors on stderr) and exits nonzero if any file fails.
+
+For an application that consumes whole fonts, call
+`convertFont(font, {output: "lines", tolerance: 0.01})`. Here the tolerance is
+in **font units**. The result is a validated `linefont/1` font with the chosen
+path vocabulary, original metrics, anchors, aliases and composites. The input
+retains its authored curves. Native callers use `convert_font` or send
+`{"op":"convert","font":...,"output":"beziers","tolerance":0.01}`.

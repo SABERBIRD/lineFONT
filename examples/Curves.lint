@@ -1,0 +1,14 @@
+{
+  "format": "linefont/0.0.2",
+  "id": "lineFONT/curves-example",
+  "name": "Curves example",
+  "version": "1",
+  "authors": ["lineFONT contributors"],
+  "license": "CC-BY-4.0",
+  "style": "upright",
+  "metrics": { "capHeight": 10, "baseline": 10, "defaultAdvance": 11 },
+  "glyphs": {
+    "0053": { "d": "M9 2 Q6 -1 3 1 T5 5 C11 7 8 11 4 10 S1 8 1 8" },
+    "039F": { "d": "M9 5 A4 5 15 0 1 1 5 A4 5 15 0 1 9 5" }
+  }
+}

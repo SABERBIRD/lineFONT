@@ -1,6 +1,6 @@
-import { layout } from "../dist/index.js";
+import { translate } from "./preview-i18n.mjs";
+import { inkBounds, layout } from "../dist/index.js";
 import { escapeXml } from "./preview-xml.mjs";
-import { inkBounds } from "./preview-ink-bounds.mjs";
 
 export function matchingGlyphs(font, filter = "") {
   const keys = Object.keys(font.glyphs).sort(
@@ -75,7 +75,7 @@ function specimenGeometry(font, keys, shown) {
   return { visible, scale, px, py };
 }
 
-function glyphCard(font, geometry, key, index) {
+function glyphCard(font, geometry, key, index, t) {
   const { capHeight, baseline } = font.metrics;
   const { visible, scale, px, py } = geometry;
   const { glyph, advance, anchors } = visible.get(key);
@@ -96,18 +96,19 @@ function glyphCard(font, geometry, key, index) {
     )
     .join("");
   const rect = `<rect x="0" y="0" width="38" height="28" rx="1" fill="#fff" stroke="#b5c4ca" stroke-width=".2"/>`;
-  const label = `U+${key} · advance ${number(advance)}`;
+  const label = `U+${key}${t(" · advance ")}${number(advance)}`;
   return `<g data-glyph="${key}" transform="translate(${x} ${y})">${rect}${text(2, 4, label, 2.6)}
     <svg x="0" y="5" width="38" height="19.5" viewBox="0 5 38 19.5" overflow="hidden">
       ${line(2, py(0), 36, py(0), "#9eafb7")}${line(2, py(capHeight), 36, py(capHeight), "#376a91")}
       ${line(px(0), 5, px(0), 24.5, "#9eafb7")}${line(px(advance), 5, px(advance), 24.5, "#267351")}
       ${frame}${outline}${points}
     </svg>
-    ${!glyph || glyph.fontIndex === null ? text(2, 26.5, "Unresolved in text layout", 2.2) : ""}
+    ${!glyph || glyph.fontIndex === null ? text(2, 26.5, t("Unresolved in text layout"), 2.2) : ""}
   </g>`;
 }
 
-export function specimen(font, sample, page, filter = "") {
+export function specimen(font, sample, page, filter = "", locale = "en") {
+  const t = (label) => translate(locale, label);
   const keys = matchingGlyphs(font);
   const filtered = matchingGlyphs(font, filter);
   const pages = Math.max(1, Math.ceil(filtered.length / 40));
@@ -139,7 +140,7 @@ export function specimen(font, sample, page, filter = "") {
   const legendY = bounds ? number(35 + sampleHeight) : 21;
   const cardTop = legendY + 6;
   const height = number(cardTop + Math.ceil(shown.length / 5) * 30 + 4);
-  const coverage = `${filtered.length}/${keys.length} glyphs · page ${page}/${pages}`;
+  const coverage = `${filtered.length}/${keys.length}${t(" glyphs")}${t(" · page ")}${page}/${pages}`;
   const missingLabel = missing.length
     ? missing.slice(0, 9).join(", ") +
       (missing.length > 9 ? ` … (${missing.length} total)` : "")
@@ -160,7 +161,7 @@ export function specimen(font, sample, page, filter = "") {
   `
       : ""
   }
-  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · stroke bounds")}
-  <g transform="translate(0 ${cardTop})">${shown.map((key, index) => glyphCard(font, geometry, key, index)).join("\n")}</g>
+  ${text(6, legendY, t("Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · stroke bounds"))}
+  <g transform="translate(0 ${cardTop})">${shown.map((key, index) => glyphCard(font, geometry, key, index, t)).join("\n")}</g>
 </svg>\n`;
 }

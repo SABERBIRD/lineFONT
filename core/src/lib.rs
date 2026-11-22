@@ -1,3 +1,7 @@
+mod diagnostic;
+pub use diagnostic::Diagnostic;
+mod geometry;
+pub use geometry::ink_bounds;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -12,7 +16,7 @@ pub const BLOCKS: [(&str, &str); 5] = [
     ("quotes", "'\"«»‘’‚“”„"),
     ("mathematics-technical", "+−×÷=<>≤≥≠≈±∓*/%‰°′″⌀"),
 ];
-type Result<T> = std::result::Result<T, String>;
+type Result<T> = std::result::Result<T, Diagnostic>;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Metrics {
@@ -67,7 +71,7 @@ pub struct Font {
     #[serde(flatten)]
     pub extra: BTreeMap<String, Value>,
 }
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Command {
     pub code: char,
     pub values: Vec<f64>,
@@ -95,21 +99,72 @@ fn scalar(s: &str) -> Result<char> {
     let n = u32::from_str_radix(s, 16).map_err(|_| format!("Invalid Unicode key: {s}"))?;
     let c = char::from_u32(n).ok_or_else(|| format!("Invalid Unicode scalar: {s}"))?;
     if code(c) != s {
-        return Err(format!("Use canonical uppercase Unicode key: {}", code(c)));
+        return Err(format!("Use canonical uppercase Unicode key: {}", code(c)).into());
     }
     Ok(c)
 }
 fn finite(n: f64) -> bool {
     n.is_finite() && n.abs() <= 1_000_000.0
 }
-fn parse_path(d: &str) -> Result<Vec<Command>> {
+fn parse_path(d: &str, extended: bool, tolerance: f64, key: &str) -> Result<Vec<Command>> {
     if d.len() > 200_000 {
-        return Err("Glyph path is too large".into());
+        return Err(Diagnostic::at(
+            "path_limit",
+            "/d",
+            "Glyph path is too large",
+        ));
     }
     let mut commands = Vec::new();
-    for segment in svgtypes::PathParser::from(d) {
+    let mut current = [0., 0.];
+    let mut cubic_control = None;
+    let mut quad_control = None;
+    for (index, segment) in svgtypes::PathParser::from(d).enumerate() {
+        let fail = |msg: String| {
+            let mut e = Diagnostic::at("invalid_path", "/d", msg).glyph(key);
+            e.command_index = Some(index);
+            e
+        };
         use svgtypes::PathSegment::*;
-        let (code, values) = match segment.map_err(|e| e.to_string())? {
+        let segment = match segment.map_err(|e| fail(e.to_string()))? {
+            SmoothCurveTo {
+                abs: true,
+                x2,
+                y2,
+                x,
+                y,
+            } if extended => {
+                let [a, b] = cubic_control.unwrap_or(current);
+                CurveTo {
+                    abs: true,
+                    x1: 2. * current[0] - a,
+                    y1: 2. * current[1] - b,
+                    x2,
+                    y2,
+                    x,
+                    y,
+                }
+            }
+            SmoothQuadratic { abs: true, x, y } if extended => {
+                let [a, b] = quad_control.unwrap_or(current);
+                Quadratic {
+                    abs: true,
+                    x1: 2. * current[0] - a,
+                    y1: 2. * current[1] - b,
+                    x,
+                    y,
+                }
+            }
+            segment => segment,
+        };
+        cubic_control = match segment {
+            CurveTo { x2, y2, .. } => Some([x2, y2]),
+            _ => None,
+        };
+        quad_control = match segment {
+            Quadratic { x1, y1, .. } => Some([x1, y1]),
+            _ => None,
+        };
+        let (code, values) = match segment {
             MoveTo { abs: true, x, y } => ('M', vec![x, y]),
             LineTo { abs: true, x, y } => ('L', vec![x, y]),
             CurveTo {
@@ -121,17 +176,70 @@ fn parse_path(d: &str) -> Result<Vec<Command>> {
                 x,
                 y,
             } => ('C', vec![x1, y1, x2, y2, x, y]),
-            _ => return Err("Only absolute M, L, C paths are allowed".into()),
+            Quadratic {
+                abs: true,
+                x1,
+                y1,
+                x,
+                y,
+            } if extended => {
+                if ![x1, y1, x, y].into_iter().all(finite) {
+                    return Err(fail("Invalid coordinate".into()));
+                }
+                (
+                    'C',
+                    vec![
+                        (current[0] + 2. * x1) / 3.,
+                        (current[1] + 2. * y1) / 3.,
+                        (x + 2. * x1) / 3.,
+                        (y + 2. * y1) / 3.,
+                        x,
+                        y,
+                    ],
+                )
+            }
+            EllipticalArc {
+                abs: true,
+                rx,
+                ry,
+                x_axis_rotation,
+                large_arc,
+                sweep,
+                x,
+                y,
+            } if extended => {
+                if commands.is_empty() || ![rx, ry, x_axis_rotation, x, y].into_iter().all(finite) {
+                    return Err(fail("Invalid arc".into()));
+                }
+                geometry::arc_lines(
+                    current,
+                    [x, y],
+                    [rx, ry],
+                    x_axis_rotation,
+                    large_arc,
+                    sweep,
+                    tolerance,
+                    &mut commands,
+                )
+                .map_err(|e| fail(e.message))?;
+                if commands.len() > 10_000 {
+                    return Err(fail("Too many path commands".into()));
+                }
+                current = [x, y];
+                continue;
+            }
+            _ => return Err(fail("Unsupported path command for this format".into())),
         };
         if commands.is_empty() && code != 'M' {
-            return Err("Path must begin with M".into());
+            return Err(fail("Path must begin with M".into()));
         }
         if !values.iter().all(|n| finite(*n)) {
-            return Err("Invalid path coordinate".into());
+            return Err(fail("Invalid path coordinate".into()));
         }
+        current = [values[values.len() - 2], values[values.len() - 1]];
         commands.push(Command { code, values });
         if commands.len() > 10_000 {
-            return Err("Too many path commands".into());
+            return Err(fail("Too many path commands".into()));
         }
     }
     Ok(commands)
@@ -150,13 +258,23 @@ fn shifted(commands: &[Command], x: f64, y: f64, scale: f64) -> Vec<Command> {
         })
         .collect()
 }
-fn resolve(font: &Font, key: &str, stack: &mut Vec<String>, budget: &mut usize) -> Result<Shape> {
+fn resolve(
+    font: &Font,
+    key: &str,
+    stack: &mut Vec<String>,
+    budget: &mut usize,
+    tolerance: f64,
+) -> Result<Shape> {
     *budget += 1;
     if *budget > 200_000 {
         return Err("Too many glyph references".into());
     }
     if stack.len() >= 32 || stack.iter().any(|s| s == key) {
-        return Err(format!("Cyclic or deep glyph reference: {key}"));
+        return Err(Diagnostic::at(
+            "glyph_reference",
+            "",
+            format!("Cyclic or deep glyph reference: {key}"),
+        ));
     }
     let g = font
         .glyphs
@@ -164,39 +282,73 @@ fn resolve(font: &Font, key: &str, stack: &mut Vec<String>, budget: &mut usize) 
         .ok_or_else(|| format!("Missing glyph reference: {key}"))?;
     let modes = g.d.is_some() as u8 + g.alias.is_some() as u8 + g.composite.is_some() as u8;
     if modes != 1 {
-        return Err(format!(
-            "Glyph {key} needs exactly one of d, alias, composite"
+        return Err(Diagnostic::at(
+            "glyph_definition",
+            "",
+            format!("Glyph {key} needs exactly one of d, alias, composite"),
         ));
     }
     stack.push(key.into());
     let mut shape = if let Some(d) = &g.d {
         Shape {
-            commands: parse_path(d)?,
+            commands: parse_path(d, font.format == "linefont/0.0.2", tolerance, key)?,
             advance: font.metrics.default_advance,
             anchors: BTreeMap::new(),
             attach: None,
         }
     } else if let Some(alias) = &g.alias {
-        scalar(alias)?;
-        resolve(font, alias, stack, budget)?
+        scalar(alias).map_err(|e| Diagnostic::at("unicode_key", "/alias", e.message).glyph(key))?;
+        resolve(font, alias, stack, budget, tolerance).map_err(|e| {
+            if e.glyph.is_some() {
+                e
+            } else {
+                Diagnostic::at("glyph_reference", "/alias", e.message).glyph(key)
+            }
+        })?
     } else {
         let parts = g.composite.as_ref().unwrap();
         if parts.is_empty() || parts.len() > 32 {
-            return Err("Composite needs 1–32 parts".into());
+            return Err(Diagnostic::at(
+                "invalid_composite",
+                "/composite",
+                "Composite needs 1–32 parts",
+            ));
         }
-        let mut base = resolve(font, &parts[0].code, stack, budget)?;
+        let mut base = None;
         let mut all = Vec::new();
-        for part in parts {
-            scalar(&part.code)?;
+        for (index, part) in parts.iter().enumerate() {
+            let reference = format!("/composite/{index}/code");
+            scalar(&part.code)
+                .map_err(|e| Diagnostic::at("unicode_key", &reference, e.message).glyph(key))?;
             if !finite(part.x) || !finite(part.y) {
-                return Err("Invalid composite offset".into());
+                return Err(Diagnostic::at(
+                    "invalid_offset",
+                    format!("/composite/{index}"),
+                    "Invalid composite offset",
+                )
+                .glyph(key));
             }
-            let child = resolve(font, &part.code, stack, budget)?;
+            let child = resolve(font, &part.code, stack, budget, tolerance).map_err(|e| {
+                if e.glyph.is_some() {
+                    e
+                } else {
+                    Diagnostic::at("glyph_reference", &reference, e.message).glyph(key)
+                }
+            })?;
             all.extend(shifted(&child.commands, part.x, part.y, 1.0));
             if all.len() > 10_000 {
-                return Err("Expanded glyph is too large".into());
+                return Err(Diagnostic::at(
+                    "path_limit",
+                    "/composite",
+                    "Expanded glyph is too large",
+                )
+                .glyph(key));
+            }
+            if base.is_none() {
+                base = Some(child);
             }
         }
+        let mut base = base.expect("nonempty composite");
         base.commands = all;
         base
     };
@@ -205,11 +357,19 @@ fn resolve(font: &Font, key: &str, stack: &mut Vec<String>, budget: &mut usize) 
         shape.advance = a;
     }
     if !finite(shape.advance) || shape.advance < 0.0 {
-        return Err("Invalid advance".into());
+        return Err(Diagnostic::at(
+            "invalid_advance",
+            "/advance",
+            "Invalid advance",
+        ));
     }
     for a in g.anchors.values().chain(g.attach.iter()) {
         if !finite(a.x) || !finite(a.y) {
-            return Err("Invalid anchor".into());
+            return Err(Diagnostic::at(
+                "invalid_anchor",
+                "/anchors",
+                "Invalid anchor",
+            ));
         }
     }
     shape.anchors.extend(g.anchors.clone());
@@ -218,13 +378,25 @@ fn resolve(font: &Font, key: &str, stack: &mut Vec<String>, budget: &mut usize) 
     }
     Ok(shape)
 }
-fn load(font: Font) -> Result<Loaded> {
-    if font.format != "linefont/1" {
-        return Err("Unsupported Linefont format".into());
+fn load_at(font: Font, tolerance: f64) -> Result<Loaded> {
+    if font.format != "linefont/1" && font.format != "linefont/0.0.2" {
+        return Err(Diagnostic::at(
+            "unsupported_format",
+            "/format",
+            "Unsupported Linefont format",
+        ));
     }
-    for field in [&font.id, &font.name, &font.version] {
+    for (path, field) in [
+        ("/id", &font.id),
+        ("/name", &font.name),
+        ("/version", &font.version),
+    ] {
         if field.trim().is_empty() || field.len() > 200 {
-            return Err("Invalid font metadata".into());
+            return Err(Diagnostic::at(
+                "invalid_metadata",
+                path,
+                "Invalid font metadata",
+            ));
         }
     }
     if font.authors.is_empty()
@@ -234,10 +406,18 @@ fn load(font: Font) -> Result<Loaded> {
             .iter()
             .any(|a| a.trim().is_empty() || a.len() > 200)
     {
-        return Err("Invalid authors".into());
+        return Err(Diagnostic::at(
+            "invalid_authors",
+            "/authors",
+            "Invalid authors",
+        ));
     }
     if !["upright", "italic"].contains(&font.style.as_str()) {
-        return Err("Invalid font style".into());
+        return Err(Diagnostic::at(
+            "invalid_style",
+            "/style",
+            "Invalid font style",
+        ));
     }
     let m = &font.metrics;
     if !finite(m.cap_height)
@@ -246,7 +426,11 @@ fn load(font: Font) -> Result<Loaded> {
         || !finite(m.default_advance)
         || m.default_advance < 0.0
     {
-        return Err("Invalid font metrics".into());
+        return Err(Diagnostic::at(
+            "invalid_metrics",
+            "/metrics",
+            "Invalid font metrics",
+        ));
     }
     if font.glyphs.len() > 20_000 {
         return Err("Too many glyphs".into());
@@ -255,8 +439,9 @@ fn load(font: Font) -> Result<Loaded> {
     let mut total = 0;
     let mut budget = 0;
     for key in font.glyphs.keys() {
-        let c = scalar(key)?;
-        let shape = resolve(&font, key, &mut Vec::new(), &mut budget)?;
+        let c = scalar(key).map_err(|e| Diagnostic::at("unicode_key", "", e.message).glyph(key))?;
+        let shape = resolve(&font, key, &mut Vec::new(), &mut budget, tolerance)
+            .map_err(|e| e.glyph(key))?;
         total += shape.commands.len();
         if total > 200_000 {
             return Err("Expanded font is too large".into());
@@ -267,7 +452,11 @@ fn load(font: Font) -> Result<Loaded> {
         let count = chars.chars().filter(|c| shapes.contains_key(c)).count();
         if count != 0 && count != chars.chars().count() {
             let missing: String = chars.chars().filter(|c| !shapes.contains_key(c)).collect();
-            return Err(format!("Incomplete {name} block; missing: {missing}"));
+            return Err(Diagnostic::at(
+                "incomplete_block",
+                "/glyphs",
+                format!("Incomplete {name} block; missing: {missing}"),
+            ));
         }
     }
     let canonical = serde_json::to_vec(&font).map_err(|e| e.to_string())?;
@@ -277,6 +466,59 @@ fn load(font: Font) -> Result<Loaded> {
         shapes,
         fingerprint,
     })
+}
+/// Convert author paths in font coordinates and preserve Unicode references and metrics.
+pub fn convert_font(font: Font, output: &str, tolerance: f64) -> Result<Font> {
+    use std::fmt::Write;
+    if !tolerance.is_finite() || tolerance <= 0. {
+        return Err(Diagnostic::at(
+            "invalid_tolerance",
+            "/tolerance",
+            "Expected positive finite tolerance",
+        ));
+    }
+    let linear = match output {
+        "lines" => true,
+        "beziers" => false,
+        _ => {
+            return Err(Diagnostic::at(
+                "invalid_output",
+                "/output",
+                "Expected lines or beziers",
+            ))
+        }
+    };
+    let loaded = load_at(font, tolerance)?;
+    let mut converted = loaded.font;
+    let mut budget = 200_000usize;
+    for (key, glyph) in &mut converted.glyphs {
+        let Some(path) = &mut glyph.d else { continue };
+        let commands = &loaded.shapes[&scalar(key)?].commands;
+        let flattened;
+        let commands = if linear {
+            let mut available = budget.min(10_000);
+            flattened =
+                geometry::lines(commands, tolerance, &mut available).map_err(|e| e.glyph(key))?;
+            &flattened
+        } else {
+            commands
+        };
+        budget = budget
+            .checked_sub(commands.len())
+            .ok_or("Expanded font is too large")?;
+        path.clear();
+        for cmd in commands {
+            path.push(cmd.code);
+            for (i, v) in cmd.values.iter().enumerate() {
+                if i > 0 {
+                    path.push(' ');
+                }
+                write!(path, "{v}").expect("writing to String");
+            }
+        }
+    }
+    converted.format = "linefont/1".into();
+    Ok(load_at(converted, tolerance)?.font)
 }
 fn composed(font: &Loaded, text: &str) -> Option<Shape> {
     let mut chars = text.chars();
@@ -317,13 +559,66 @@ fn composed(font: &Loaded, text: &str) -> Option<Shape> {
     }
     Some(base)
 }
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CoverageEntry {
+    pub kind: &'static str,
+    pub font_index: Option<usize>,
+}
 impl Engine {
+    pub fn coverage(&self, text: &str) -> Result<BTreeMap<String, CoverageEntry>> {
+        if text.len() > 400_000 {
+            return Err("Text is too long".into());
+        }
+        let mut result = BTreeMap::new();
+        for cluster in text.graphemes(true) {
+            if result.contains_key(cluster) {
+                continue;
+            }
+            let nfc: String = cluster.nfc().collect();
+            let hit = self
+                .select(&nfc)
+                .map(|(i, _)| {
+                    let k = code(nfc.chars().next().unwrap());
+                    let kind = if nfc.chars().count() == 1 {
+                        match self.fonts[i].font.glyphs.get(&k) {
+                            Some(g) if g.composite.is_some() => "composite",
+                            Some(g) if g.alias.is_some() => "alias",
+                            Some(_) => "direct",
+                            None => "composed",
+                        }
+                    } else {
+                        "composed"
+                    };
+                    CoverageEntry {
+                        kind,
+                        font_index: Some(i),
+                    }
+                })
+                .unwrap_or(CoverageEntry {
+                    kind: "missing",
+                    font_index: None,
+                });
+            result.insert(cluster.to_owned(), hit);
+        }
+        Ok(result)
+    }
     pub fn new(fonts: Vec<Font>) -> Result<Self> {
         if fonts.is_empty() || fonts.len() > 64 {
             return Err("Need 1–64 fonts".into());
         }
         Ok(Self {
-            fonts: fonts.into_iter().map(load).collect::<Result<_>>()?,
+            fonts: fonts
+                .into_iter()
+                .enumerate()
+                .map(|(index, font)| {
+                    let t = font.metrics.cap_height / 1000.;
+                    load_at(font, t).map_err(|mut e| {
+                        e.path = format!("/fonts/{index}{}", e.path);
+                        e
+                    })
+                })
+                .collect::<Result<_>>()?,
         })
     }
     fn select(&self, text: &str) -> Option<(usize, Shape)> {
@@ -381,7 +676,47 @@ impl Engine {
         order
     }
     pub fn layout(&self, request: LayoutRequest) -> Result<Layout> {
-        let r = request;
+        let tolerance = request.tolerance.unwrap_or(request.height / 1000.);
+        if !tolerance.is_finite()
+            || tolerance <= 0.
+            || !finite(request.height)
+            || request.height <= 0.
+        {
+            return Err("Invalid height or tolerance".into());
+        }
+        let linear = match request.output.as_deref() {
+            None | Some("beziers") => false,
+            Some("lines") => true,
+            _ => return Err("Unknown output type".into()),
+        };
+        let mut result = if request.tolerance.is_some()
+            && self.fonts.iter().any(|f| f.font.format == "linefont/0.0.2")
+        {
+            let engine = Engine {
+                fonts: self
+                    .fonts
+                    .iter()
+                    .map(|f| {
+                        load_at(
+                            f.font.clone(),
+                            tolerance * f.font.metrics.cap_height / request.height / 2.,
+                        )
+                    })
+                    .collect::<Result<_>>()?,
+            };
+            engine.layout_inner(request)?
+        } else {
+            self.layout_inner(request)?
+        };
+        if linear {
+            let mut remaining = 2_000_000;
+            for g in &mut result.glyphs {
+                g.commands = geometry::lines(&g.commands, tolerance, &mut remaining)?;
+            }
+        }
+        Ok(result)
+    }
+    fn layout_inner(&self, r: LayoutRequest) -> Result<Layout> {
         if r.text.len() > 400_000 || r.text.encode_utf16().count() > 100_000 {
             return Err("Text is too long".into());
         }
@@ -739,6 +1074,8 @@ impl Engine {
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LayoutRequest {
+    pub tolerance: Option<f64>,
+    pub output: Option<String>,
     pub text: String,
     pub height: f64,
     pub line_height: f64,
@@ -806,7 +1143,38 @@ fn request(value: Value) -> Result<Value> {
     match value["op"].as_str() {
         Some("fonts") => {
             let fonts: Vec<Font> =
-                serde_json::from_value(value["fonts"].clone()).map_err(|e| e.to_string())?;
+                serde_path_to_error::deserialize(&value["fonts"]).map_err(|e| {
+                    use serde_path_to_error::Segment;
+                    let mut fields: Vec<String> = e
+                        .path()
+                        .iter()
+                        .map(|part| match part {
+                            Segment::Seq { index } => index.to_string(),
+                            Segment::Map { key } => key.clone(),
+                            _ => "?".into(),
+                        })
+                        .collect();
+                    let message = e.inner().to_string();
+                    if let Some(key) = message
+                        .strip_prefix("missing field `")
+                        .and_then(|m| m.split('`').next())
+                    {
+                        fields.push(key.into());
+                    }
+                    let glyph = fields
+                        .windows(2)
+                        .find(|p| p[0] == "glyphs")
+                        .map(|p| p[1].clone());
+                    let mut diagnostic = Diagnostic::at("font_structure", "/fonts", message);
+                    for field in fields {
+                        diagnostic.path.push('/');
+                        diagnostic
+                            .path
+                            .push_str(&field.replace('~', "~0").replace('/', "~1"));
+                    }
+                    diagnostic.glyph = glyph;
+                    diagnostic
+                })?;
             let engine = Engine::new(fonts)?;
             let result = json!({"fonts":engine.fonts.iter().map(|f|json!({"font":f.font,"fingerprint":f.fingerprint})).collect::<Vec<_>>()});
             ENGINE.with(|e| *e.borrow_mut() = Some(engine));
@@ -818,7 +1186,25 @@ fn request(value: Value) -> Result<Value> {
             serde_json::to_value(
                 engine.layout(serde_json::from_value(value).map_err(|e| e.to_string())?)?,
             )
-            .map_err(|e| e.to_string())
+            .map_err(|e| e.to_string().into())
+        }),
+        Some("convert") => {
+            let font = serde_json::from_value(value["font"].clone())
+                .map_err(|e| Diagnostic::at("font_structure", "/font", e.to_string()))?;
+            let output = value["output"].as_str().ok_or("Missing output")?;
+            let tolerance = value["tolerance"].as_f64().ok_or("Missing tolerance")?;
+            Ok(json!(convert_font(font, output, tolerance)?))
+        }
+        Some("inkBounds") => {
+            let commands: Vec<Command> =
+                serde_json::from_value(value["commands"].clone()).map_err(|e| e.to_string())?;
+            Ok(json!(ink_bounds(&commands)?))
+        }
+        Some("coverage") => ENGINE.with(|e| {
+            let e = e.borrow();
+            let engine = e.as_ref().ok_or("Fonts are not loaded")?;
+            let text = value["text"].as_str().ok_or("Missing text")?;
+            Ok(json!(engine.coverage(text)?))
         }),
         Some("rank") => ENGINE.with(|e| {
             let e = e.borrow();
@@ -855,12 +1241,12 @@ pub unsafe extern "C" fn lint_call(ptr: *const u8, len: usize) -> LintBuffer {
         Err("Request is too large".into())
     } else {
         serde_json::from_slice(bytes)
-            .map_err(|e| e.to_string())
+            .map_err(|e| Diagnostic::at("invalid_json", "", e.to_string()))
             .and_then(request)
     };
     let output = serde_json::to_vec(&match response {
         Ok(value) => json!({"ok":value}),
-        Err(error) => json!({"error":error}),
+        Err(error) => json!({"error":error.to_string(), "diagnostic":error}),
     })
     .unwrap();
     let len = output.len();

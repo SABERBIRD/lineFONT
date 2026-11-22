@@ -1,8 +1,8 @@
-import { layout } from "../dist/index.js";
+import { translate } from "./preview-i18n.mjs";
+import { inkBounds, layout } from "../dist/index.js";
 import { escapeXml } from "./preview-xml.mjs";
-import { inkBounds } from "./preview-ink-bounds.mjs";
 
-export function glyphDetail(font, key, options) {
+export function glyphDetail(font, key, options, locale = "en") {
   const definition = font.glyphs[key];
   if (!definition) throw Error("Choose a glyph from this font");
   const { capHeight, baseline, defaultAdvance } = font.metrics;
@@ -104,7 +104,7 @@ export function glyphDetail(font, key, options) {
       return `<g>${circle(point.x, y, "#9d1761")}<text x="${point.x + unit * 2}" y="${y - unit * 2}" fill="#9d1761" font-size="${unit * 4}">${escapeXml(name)}</text></g>`;
     })
     .join("");
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${left - margin} ${top - margin} ${width + margin * 2} ${height + margin * 2}" role="img" aria-label="Glyph U+${key} detail" fill="none">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${left - margin} ${top - margin} ${width + margin * 2} ${height + margin * 2}" role="img" aria-label="${translate(locale, "Glyph")} U+${key} · ${translate(locale, "detail")}" fill="none">
     <path d="M${left - margin} ${capHeight} H${left + width + margin}" stroke="#376a91" stroke-width="${stroke(0.3)}"/>
     ${options.strokes ? `<path d="${d}" stroke="#142b35" stroke-width="${stroke(0.8)}" stroke-linecap="round"/>${boundRect}` : ""}
     ${options.directions ? arrows.join("") : ""}

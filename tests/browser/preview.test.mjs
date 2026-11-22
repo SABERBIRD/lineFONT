@@ -181,6 +181,25 @@ test(
     assert(
       await evaluate("document.documentElement.scrollWidth <= innerWidth"),
     );
+    const localized = await evaluate(`(() => {
+      function select(id,value) {
+        const control = document.getElementById(id);
+        control.value = value; control.dispatchEvent(new Event("change"));
+      }
+      select("language","uk_Cyrl");
+      select("sample-type","alphabet");
+      select("ui-language","uk");
+      return [document.documentElement.lang,document.querySelector("#save-svg").textContent,
+        document.querySelector("#sample").value.includes("ґ"),document.querySelector("#alphabet-coverage").textContent,
+        !!document.querySelector("#phrase-preview path")];
+    })()`);
+    assert.deepEqual(localized.slice(0, 3), [
+      "uk",
+      "Завантажити зразок у SVG",
+      true,
+    ]);
+    assert.match(localized[3], /Покриття абетки.*відсутні 0/);
+    assert(localized[4]);
     await command("Emulation.setScriptExecutionDisabled", { value: true });
     await command("Page.setDocumentContent", {
       frameId: frameTree.frame.id,

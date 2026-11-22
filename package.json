@@ -1,7 +1,7 @@
 {
   "name": "@saberbird/linefont",
   "version": "0.0.2",
-  "description": "Single-line vector fonts and text layout for linefont/1",
+  "description": "Single-line vector fonts and text layout for lineFONT",
   "license": "MIT AND CC-BY-4.0 AND Apache-2.0",
   "type": "module",
   "engines": {
@@ -29,7 +29,8 @@
   },
   "bin": {
     "linefont-validate": "./tools/validate-linefont.mjs",
-    "linefont-preview": "./tools/preview-linefont.mjs"
+    "linefont-preview": "./tools/preview-linefont.mjs",
+    "linefont-coverage": "./tools/coverage-linefont.mjs"
   },
   "files": [
     "dist/",
@@ -43,14 +44,16 @@
     "THIRD_PARTY.txt",
     "tools/preview-*.mjs",
     "tools/preview.css",
-    "tools/preview-language-samples.*"
+    "tools/preview-language-samples.*",
+    "tools/coverage-linefont.mjs"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node tools/copy-wasm.mjs",
     "test": "node --test tests/*.test.mjs",
     "font:validate": "node tools/validate-linefont.mjs",
     "prepack": "npm run build",
-    "font:preview": "node tools/preview-linefont.mjs"
+    "font:preview": "node tools/preview-linefont.mjs",
+    "font:coverage": "node tools/coverage-linefont.mjs"
   },
   "devDependencies": {
     "typescript": "5.9.3"

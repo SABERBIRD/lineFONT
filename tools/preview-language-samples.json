@@ -6,7 +6,9 @@
       "name": "Ukrainian",
       "autonym": "Українська",
       "text": "Зігніть деталь Ґ уздовж лінії А–Б. Ширина 12,5 мм, кут 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "абвгґдеєжзиіїйклмнопрстуфхцчшщьюяАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ",
+      "review": "pending"
     },
     {
       "id": "en_Latn",
@@ -14,7 +16,9 @@
       "name": "English",
       "autonym": "English",
       "text": "Cut along line A–B. Width 12.5 mm, angle 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+      "review": "pending"
     },
     {
       "id": "de_Latn",
@@ -22,7 +26,9 @@
       "name": "German",
       "autonym": "Deutsch",
       "text": "Entlang der Linie A–B schneiden. Breite 12,5 mm, Winkel 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzäöüßABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜẞ",
+      "review": "pending"
     },
     {
       "id": "fr_Latn",
@@ -30,7 +36,9 @@
       "name": "French",
       "autonym": "Français",
       "text": "Couper le long de la ligne A–B. Largeur 12,5 mm, angle de 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzàâæçéèêëîïôœùûüÿABCDEFGHIJKLMNOPQRSTUVWXYZÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ",
+      "review": "pending"
     },
     {
       "id": "es_Latn",
@@ -38,7 +46,9 @@
       "name": "Spanish",
       "autonym": "Español",
       "text": "Cortar por la línea A–B. Ancho 12,5 mm, ángulo de 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzáéíñóúüABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÑÓÚÜ",
+      "review": "pending"
     },
     {
       "id": "pt_Latn",
@@ -46,7 +56,9 @@
       "name": "Portuguese",
       "autonym": "Português",
       "text": "Cortar ao longo da linha A–B. Largura 12,5 mm, ângulo de 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzáâãàçéêíóôõúABCDEFGHIJKLMNOPQRSTUVWXYZÁÂÃÀÇÉÊÍÓÔÕÚ",
+      "review": "pending"
     },
     {
       "id": "it_Latn",
@@ -54,7 +66,9 @@
       "name": "Italian",
       "autonym": "Italiano",
       "text": "Tagliare lungo la linea A–B. Larghezza 12,5 mm, angolo di 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzàèéìòóùABCDEFGHIJKLMNOPQRSTUVWXYZÀÈÉÌÒÓÙ",
+      "review": "pending"
     },
     {
       "id": "pl_Latn",
@@ -62,7 +76,9 @@
       "name": "Polish",
       "autonym": "Polski",
       "text": "Wytnij wzdłuż linii A–B. Szerokość 12,5 mm, kąt 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "aąbcćdeęfghijklłmnńoóprsśtuwyzźżAĄBCĆDEĘFGHIJKLŁMNŃOÓPRSŚTUWYZŹŻ",
+      "review": "pending"
     },
     {
       "id": "cs_Latn",
@@ -70,7 +86,9 @@
       "name": "Czech",
       "autonym": "Čeština",
       "text": "Řežte podél čáry A–B. Šířka 12,5 mm, úhel 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzáčďéěíňóřšťúůýžABCDEFGHIJKLMNOPQRSTUVWXYZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ",
+      "review": "pending"
     },
     {
       "id": "sk_Latn",
@@ -78,7 +96,9 @@
       "name": "Slovak",
       "autonym": "Slovenčina",
       "text": "Režte pozdĺž čiary A–B. Šírka 12,5 mm, uhol 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzáäčďéíĺľňóôŕšťúýžABCDEFGHIJKLMNOPQRSTUVWXYZÁÄČĎÉÍĹĽŇÓÔŔŠŤÚÝŽ",
+      "review": "pending"
     },
     {
       "id": "ro_Latn",
@@ -86,7 +106,9 @@
       "name": "Romanian",
       "autonym": "Română",
       "text": "Tăiați de-a lungul liniei A–B. Lățime 12,5 mm, unghi de 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzăâîșțABCDEFGHIJKLMNOPQRSTUVWXYZĂÂÎȘȚ",
+      "review": "pending"
     },
     {
       "id": "hu_Latn",
@@ -94,7 +116,9 @@
       "name": "Hungarian",
       "autonym": "Magyar",
       "text": "Vágjon az A–B vonal mentén. Szélesség 12,5 mm, szög 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzáéíóöőúüűABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÖŐÚÜŰ",
+      "review": "pending"
     },
     {
       "id": "tr_Latn",
@@ -102,7 +126,9 @@
       "name": "Turkish",
       "autonym": "Türkçe",
       "text": "A–B çizgisi boyunca kesin. Genişlik 12,5 mm, açı 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcçdefgğhıijklmnoöprsştuüvyzABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ",
+      "review": "pending"
     },
     {
       "id": "nl_Latn",
@@ -110,7 +136,9 @@
       "name": "Dutch",
       "autonym": "Nederlands",
       "text": "Knip langs lijn A–B. Breedte 12,5 mm, hoek 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzáéíóúäëïöüèABCDEFGHIJKLMNOPQRSTUVWXYZÁÉÍÓÚÄËÏÖÜÈ",
+      "review": "pending"
     },
     {
       "id": "sv_Latn",
@@ -118,7 +146,9 @@
       "name": "Swedish",
       "autonym": "Svenska",
       "text": "Klipp längs linjen A–B. Bredd 12,5 mm, vinkel 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzåäöABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ",
+      "review": "pending"
     },
     {
       "id": "fi_Latn",
@@ -126,7 +156,9 @@
       "name": "Finnish",
       "autonym": "Suomi",
       "text": "Leikkaa viivaa A–B pitkin. Leveys 12,5 mm, kulma 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "abcdefghijklmnopqrstuvwxyzåäöšžABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖŠŽ",
+      "review": "pending"
     },
     {
       "id": "bg_Cyrl",
@@ -134,7 +166,9 @@
       "name": "Bulgarian",
       "autonym": "Български",
       "text": "Изрежете по линията А–Б. Ширина 12,5 мм, ъгъл 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "абвгдежзийклмнопрстуфхцчшщъьюяАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЬЮЯ",
+      "review": "pending"
     },
     {
       "id": "sr_Cyrl",
@@ -142,7 +176,9 @@
       "name": "Serbian",
       "autonym": "Српски",
       "text": "Исеците дуж линије А–Б. Ширина 12,5 мм, угао 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "абвгдђежзијклљмнњопрстћуфхцчџшАБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШ",
+      "review": "pending"
     },
     {
       "id": "el_Grek",
@@ -150,7 +186,9 @@
       "name": "Greek",
       "autonym": "Ελληνικά",
       "text": "Κόψτε κατά μήκος της γραμμής Α–Β. Πλάτος 12,5 mm, γωνία 45°.",
-      "kind": "technical"
+      "kind": "technical",
+      "alphabet": "αβγδεζηθικλμνξοπρσςτυφχψωάέήίόύώϊϋΐΰΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩΆΈΉΊΌΎΏΪΫ",
+      "review": "pending"
     }
   ]
 }

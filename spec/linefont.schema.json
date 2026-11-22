@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "lineFONT single-line font",
+  "type": "object",
+  "required": [
+    "format",
+    "id",
+    "name",
+    "version",
+    "authors",
+    "style",
+    "metrics",
+    "glyphs"
+  ],
+  "properties": {
+    "format": {
+      "enum": [
+        "linefont/1",
+        "linefont/0.0.2"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "\\S"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "\\S"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "pattern": "\\S"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200,
+        "pattern": "\\S"
+      },
+      "minItems": 1,
+      "maxItems": 100
+    },
+    "style": {
+      "enum": [
+        "upright",
+        "italic"
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "capHeight",
+        "baseline",
+        "defaultAdvance"
+      ],
+      "properties": {
+        "capHeight": {
+          "type": "number",
+          "minimum": -1000000,
+          "maximum": 1000000,
+          "exclusiveMinimum": 0
+        },
+        "baseline": {
+          "type": "number",
+          "minimum": -1000000,
+          "maximum": 1000000
+        },
+        "defaultAdvance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      }
+    },
+    "glyphs": {
+      "type": "object",
+      "maxProperties": 20000,
+      "propertyNames": {
+        "$ref": "#/$defs/key"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/glyph"
+      }
+    },
+    "license": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "key": {
+      "type": "string",
+      "pattern": "^(?:[0-9A-C][0-9A-F]{3}|D[0-7][0-9A-F]{2}|[E-F][0-9A-F]{3}|[1-9A-F][0-9A-F]{4}|10[0-9A-F]{4})$"
+    },
+    "glyph": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "d": {
+          "type": "string",
+          "maxLength": 200000
+        },
+        "alias": {
+          "$ref": "#/$defs/key"
+        },
+        "composite": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "code"
+            ],
+            "properties": {
+              "code": {
+                "$ref": "#/$defs/key"
+              },
+              "x": {
+                "type": "number",
+                "minimum": -1000000,
+                "maximum": 1000000
+              },
+              "y": {
+                "type": "number",
+                "minimum": -1000000,
+                "maximum": 1000000
+              }
+            }
+          },
+          "minItems": 1,
+          "maxItems": 32
+        },
+        "advance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "anchors": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/point"
+          }
+        },
+        "attach": {
+          "$ref": "#/$defs/point"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "d"
+          ]
+        },
+        {
+          "required": [
+            "alias"
+          ]
+        },
+        {
+          "required": [
+            "composite"
+          ]
+        }
+      ]
+    },
+    "point": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": -1000000,
+          "maximum": 1000000
+        },
+        "y": {
+          "type": "number",
+          "minimum": -1000000,
+          "maximum": 1000000
+        }
+      }
+    }
+  }
+}

@@ -36,9 +36,9 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
     notices,
     license,
     specimenSource,
-    boundsSource,
     xmlSource,
     detailSource,
+    i18n,
     stylesheet,
   ] = await Promise.all([
     read("../dist/index.js"),
@@ -48,9 +48,9 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
     read("./preview-language-samples.NOTICE.txt"),
     read("../LICENSES/Apache-2.0.txt"),
     read("./preview-specimen.mjs"),
-    read("./preview-ink-bounds.mjs"),
     read("./preview-xml.mjs"),
     read("./preview-detail.mjs"),
+    read("./preview-i18n.mjs"),
     read("./preview.css"),
   ]);
   // Inline the build's WASM bytes so a file:// preview needs no server.
@@ -74,7 +74,7 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
 ${stylesheet}
 </style>
 <p id="script-status" role="status">Interactive previews require JavaScript. Open this downloaded HTML in a browser with JavaScript enabled. The glyph sheet is available below.</p>
-<header class="mast"><strong>line<span>FONT</span></strong><nav aria-label="Workspace"><a href="#sample-workspace">Sample</a><a href="#glyphs">Glyphs</a></nav></header>
+<header class="mast"><strong>line<span>FONT</span></strong><nav aria-label="Workspace"><a href="#sample-workspace">Sample</a><a href="#glyphs">Glyphs</a></nav><select id="ui-language" aria-label="Interface language / Мова інтерфейсу"><option value="en">English</option><option value="uk">Українська</option></select></header>
 <main><header class="font-header">
   <h1 id="font-name">${escapeXml(font.name)}</h1>
   <p id="font-metrics">${escapeXml(font.version)} · cap height ${font.metrics.capHeight} · baseline ${font.metrics.baseline} · default advance ${font.metrics.defaultAdvance}</p>
@@ -103,7 +103,8 @@ ${stylesheet}
     <option value="">Custom text</option>
     ${languageOptions(samples)}
   </select>
-  <p id="sample-kind"></p>
+  <label for="sample-type">Sample type</label><select id="sample-type" disabled><option value="text">Technical phrase</option><option value="alphabet">Alphabet</option></select>
+  <p id="sample-kind"></p><p id="alphabet-coverage" role="status"></p>
   <label for="sample">Sample text</label>
   <textarea id="sample" rows="2" maxlength="500" spellcheck="false"></textarea>
   <label for="sample-size">Capital height on screen (px)</label>
@@ -148,16 +149,20 @@ ${stylesheet}
     font,
     page,
     sample,
-    samples: samples.map(({ id, kind, text }) => [id, { kind, text }]),
+    samples: samples.map(({ id, kind, text, alphabet }) => [
+      id,
+      { kind, text, alphabet },
+    ]),
   })}</script>
 <script>
 (() => {
 function loadLayout() {
 ${runtime}
-return { layout, parseFont };
+return { layout, parseFont, inkBounds, coverage };
 }
+${browserSource(i18n)}
 ${browserSource(xmlSource)}
-${browserSource(boundsSource)}
+const inkBounds = commands => getRuntime().inkBounds(commands);
 const layout = (...args) => getRuntime().layout(...args);
 ${browserSource(specimenSource)}
 ${browserSource(detailSource)}

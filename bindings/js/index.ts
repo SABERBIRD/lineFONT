@@ -1,6 +1,6 @@
 import bytes from './wasm.mjs';
 export type LintFont = {
-  format: 'linefont/1';
+  format: 'linefont/1' | 'linefont/0.0.2';
   id: string;
   name: string;
   version: string;
@@ -66,7 +66,8 @@ function request<T>(value: unknown): T {
     const response = JSON.parse(
       decoder.decode(new Uint8Array(wasm.memory.buffer, outputPointer, outputLength))
     );
-    if (response.error) throw Error(response.error);
+    if (response.error)
+      throw Object.assign(Error(response.error), { diagnostic: response.diagnostic });
     return response.ok as T;
   } finally {
     wasm.lint_free(pointer, input.length);
@@ -93,6 +94,8 @@ export function layout(
     height: number;
     lineHeight: number;
     top: number;
+    tolerance?: number;
+    output?: 'beziers' | 'lines';
     wrapWidth?: number;
     letterSpacing?: number;
     style?: 'upright' | 'italic';
@@ -109,8 +112,47 @@ export function rankFonts(fonts: readonly LintFont[], text: string): LintFont[] 
 }
 export function parseFont(source: string): LintFont {
   const byteLimit = 8_000_000;
-  if (source.length > byteLimit || (source.length * 3 > byteLimit && encoder.encode(source).length > byteLimit)) {
+  if (
+    source.length > byteLimit ||
+    (source.length * 3 > byteLimit && encoder.encode(source).length > byteLimit)
+  ) {
     throw Error('Font file is too large');
   }
-  return validateFonts([JSON.parse(source)])[0].font;
+  let data: unknown;
+  try {
+    data = JSON.parse(source);
+  } catch (error) {
+    throw Object.assign(error as SyntaxError, {
+      diagnostic: {
+        code: 'invalid_json',
+        path: '',
+        glyph: null,
+        commandIndex: null,
+        message: String(error),
+      },
+    });
+  }
+  return validateFonts([data])[0].font;
+}
+
+export function inkBounds(commands: readonly Command[]): Layout['bounds'] | null {
+  return request({ op: 'inkBounds', commands });
+}
+export function coverage(
+  fonts: readonly LintFont[],
+  text: string
+): Record<
+  string,
+  { kind: 'direct' | 'alias' | 'composite' | 'composed' | 'missing'; fontIndex: number | null }
+> {
+  activate(fonts);
+  return request({ op: 'coverage', text });
+}
+
+/** Convert the whole font, using a maximum error in the font's native units. */
+export function convertFont(
+  font: LintFont,
+  options: { output: 'lines' | 'beziers'; tolerance: number }
+): LintFont {
+  return request({ op: 'convert', font, ...options });
 }

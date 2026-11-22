@@ -1,3 +1,33 @@
+const localeControl = document.getElementById("ui-language");
+const t = (label) => translate(localeControl.value, label);
+// Capture interface text once. User input, font names and glyph content are outside this set.
+const labels = [];
+for (const element of document.querySelectorAll(
+  "label,button,h2,summary,legend,nav a,#sample-type option,#language > option",
+)) {
+  for (const node of element.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim())
+      labels.push([node, node.textContent.trim()]);
+  }
+}
+const named = Array.from(document.querySelectorAll("[aria-label]"), (el) => [
+  el,
+  el.getAttribute("aria-label"),
+]);
+function errorDetail(error) {
+  const d = error.diagnostic;
+  if (localeControl.value !== "uk" || !d) return t(error.message);
+  return [
+    translate(localeControl.value, d.code) === d.code
+      ? t("Invalid font data")
+      : t(d.code),
+    d.path,
+    d.commandIndex != null ? t("Command") + " " + (d.commandIndex + 1) : "",
+    d.code,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
 // Inlined by preview-html.mjs.
 const {
   font: initialFont,
@@ -44,16 +74,23 @@ const searchKey = (value) =>
 languageSearch.addEventListener("input", () => {
   const selected = languageSelect.value;
   const query = searchKey(languageSearch.value.trim());
-  languageSelect.replaceChildren(new Option("Custom text", ""));
+  languageSelect.replaceChildren(new Option(t("Custom text"), ""));
+  const names = new Intl.DisplayNames([localeControl.value], {
+    type: "language",
+  });
+  const localized = (option) =>
+    localeControl.value === "uk"
+      ? names.of(option.value.split("_")[0]) + " · " + option.label
+      : option.label;
   for (const group of languageChoices) {
     const matches = group.options.filter((option) =>
-      searchKey(option.label).includes(query),
+      searchKey(localized(option)).includes(query),
     );
     if (!matches.length) continue;
     const element = document.createElement("optgroup");
-    element.label = group.label;
+    element.label = t(group.label);
     element.append(
-      ...matches.map((option) => new Option(option.label, option.value)),
+      ...matches.map((option) => new Option(localized(option), option.value)),
     );
     languageSelect.append(element);
   }
@@ -62,6 +99,11 @@ languageSearch.addEventListener("input", () => {
   )
     ? selected
     : "";
+  if (selected && !languageSelect.value) {
+    sampleType.disabled = true;
+    sampleKind.textContent = "";
+    renderPhrase();
+  }
 });
 
 const kindLabels = {
@@ -114,23 +156,51 @@ function renderPhrase() {
   saveSvg.disabled = true;
   missingPanel.hidden = true;
   missingSymbols.value = "";
+  const report = document.getElementById("alphabet-coverage");
+  report.textContent = "";
   const empty = !input.trim();
   phrasePreview.toggleAttribute("hidden", empty);
   if (empty) {
-    coverage.textContent = "Enter text or choose a language.";
+    coverage.textContent = t("Enter text or choose a language.");
     return;
   }
 
   try {
     if (typeof WebAssembly !== "object") {
       throw Error(
-        "Open the downloaded HTML in a browser with WebAssembly support.",
+        t("Open the downloaded HTML in a browser with WebAssembly support."),
       );
     }
 
+    const profile = samplesById.get(languageSelect.value);
+    if (profile) {
+      const entries = Object.entries(
+        getRuntime().coverage(fonts, profile.alphabet),
+      );
+      const groups = [
+        "direct",
+        "alias",
+        "composite",
+        "composed",
+        "missing",
+      ].map((kind) => {
+        const chars = entries
+          .filter(([, item]) => item.kind === kind)
+          .map(([c]) => c);
+        return (
+          t(kind) +
+          " " +
+          chars.length +
+          (kind === "missing" && chars.length
+            ? " (" + chars.join(" ") + ")"
+            : "")
+        );
+      });
+      report.textContent = t("Alphabet coverage") + " · " + groups.join(" · ");
+    }
     const pixels = sampleSize.valueAsNumber;
     if (!Number.isFinite(pixels) || pixels < 12 || pixels > 96) {
-      throw Error("Choose a capital height from 12 to 96 px.");
+      throw Error(t("Choose a capital height from 12 to 96 px."));
     }
     const screenScale = pixels / 4;
     const options = {
@@ -152,31 +222,39 @@ function renderPhrase() {
       const other = getRuntime().layout(compareFonts, options);
       paintSample(comparisonPreview, other, screenScale);
       comparisonCoverage.textContent = other.missing.length
-        ? "Missing from second font · " +
+        ? t("Missing from second font · ") +
           other.missing.map(formatCluster).join(", ")
-        : "All characters in this sample are supported.";
+        : t("All characters in this sample are supported.");
     }
     const missing = result.missing.map(formatCluster);
     missingSymbols.value = missing.join("\n");
     missingPanel.hidden = missing.length === 0;
     saveSvg.disabled = false;
     coverage.textContent = missing.length
-      ? "Missing character clusters · " + missing.length
-      : "All characters in this sample are supported.";
+      ? t("Missing character clusters · ") + missing.length
+      : t("All characters in this sample are supported.");
   } catch (error) {
     phrasePreview.setAttribute("hidden", "");
-    coverage.textContent = "Cannot render the sample · " + error.message;
+    coverage.textContent =
+      t("Cannot render the sample · ") + errorDetail(error);
   }
 }
 
-languageSelect.addEventListener("change", () => {
+const sampleType = document.getElementById("sample-type");
+function selectSample() {
   const preset = samplesById.get(languageSelect.value);
-  sampleInput.value = preset?.text ?? "";
-  sampleKind.textContent = kindLabels[preset?.kind] ?? "";
+  sampleType.disabled = !preset;
+  sampleInput.value = preset?.[sampleType.value] ?? "";
+  sampleKind.textContent = preset
+    ? t(sampleType.value === "alphabet" ? "Alphabet" : kindLabels[preset.kind])
+    : "";
   renderPhrase();
-});
+}
+languageSelect.addEventListener("change", selectSample);
+sampleType.addEventListener("change", selectSample);
 sampleInput.addEventListener("input", () => {
   languageSelect.value = "";
+  sampleType.disabled = true;
   sampleKind.textContent = "";
   cancelAnimationFrame(previewFrame);
   previewFrame = requestAnimationFrame(renderPhrase);
@@ -214,11 +292,11 @@ document.getElementById("copy-missing").addEventListener("click", async () => {
   const status = document.getElementById("copy-status");
   try {
     await navigator.clipboard.writeText(missingSymbols.value);
-    status.textContent = "Copied.";
+    status.textContent = t("Copied.");
   } catch {
     missingSymbols.focus();
     missingSymbols.select();
-    status.textContent = "Selected. Use your device’s Copy command.";
+    status.textContent = t("Selected. Use your device’s Copy command.");
   }
 });
 
@@ -237,16 +315,28 @@ function updateGlyphControls() {
   previousPage.disabled = currentPage <= 1;
   nextPage.disabled = currentPage >= totalPages;
   glyphPage.textContent = count
-    ? "Page " + currentPage + " / " + totalPages + " · " + count + " glyphs"
-    : "No matching glyphs";
+    ? t("Page ") +
+      currentPage +
+      " / " +
+      totalPages +
+      " · " +
+      count +
+      t(" glyphs")
+    : t("No matching glyphs");
 }
 function renderGlyphs() {
   updateGlyphControls();
   try {
-    glyphSheet.innerHTML = specimen(font, "", currentPage, glyphSearch.value);
+    glyphSheet.innerHTML = specimen(
+      font,
+      "",
+      currentPage,
+      glyphSearch.value,
+      localeControl.value,
+    );
     activateCards();
   } catch (error) {
-    fontStatus.textContent = "Cannot render glyphs · " + error.message;
+    fontStatus.textContent = t("Cannot render glyphs · ") + errorDetail(error);
   }
 }
 glyphSearch.addEventListener("input", () => {
@@ -268,15 +358,15 @@ function bindFontInput(id, status, errorLabel, apply) {
     const request = ++revision;
     const file = input.files[0];
     if (!file) return;
-    status.textContent = "Opening " + file.name;
+    status.textContent = t("Opening ") + file.name;
     try {
-      if (file.size > 8_000_000) throw Error("Font file exceeds 8 MB");
+      if (file.size > 8_000_000) throw Error(t("Font file exceeds 8 MB"));
       const source = await file.text();
       if (request !== revision) return;
       status.textContent = apply(getRuntime().parseFont(source), file);
     } catch (error) {
       if (request !== revision) return;
-      status.textContent = errorLabel + error.message;
+      status.textContent = t(errorLabel) + errorDetail(error);
     } finally {
       if (request === revision) {
         input.value = "";
@@ -293,7 +383,7 @@ bindFontInput(
   fontStatus,
   "Cannot open font · ",
   (candidate, file) => {
-    const sheet = specimen(candidate, "", 1);
+    const sheet = specimen(candidate, "", 1, "", localeControl.value);
     font = candidate;
     fonts = [font];
     glyphSearch.value = "";
@@ -302,16 +392,16 @@ bindFontInput(
     document.getElementById("font-name").textContent = font.name;
     document.getElementById("font-metrics").textContent =
       font.version +
-      " · cap height " +
+      t(" · cap height ") +
       font.metrics.capHeight +
-      " · baseline " +
+      t(" · baseline ") +
       font.metrics.baseline +
-      " · default advance " +
+      t(" · default advance ") +
       font.metrics.defaultAdvance;
     updateGlyphControls();
     populateDetails();
 
-    return "Opened " + file.name;
+    return t("Opened ") + file.name;
   },
 );
 updateGlyphControls();
@@ -324,11 +414,11 @@ function activateCards() {
   for (const card of glyphSheet.querySelectorAll("[data-glyph]")) {
     card.setAttribute("tabindex", "0");
     card.setAttribute("role", "button");
-    card.setAttribute("aria-label", "Inspect U+" + card.dataset.glyph);
+    card.setAttribute("aria-label", t("Inspect U+") + card.dataset.glyph);
   }
 }
 function populateDetails() {
-  detailGlyph.replaceChildren(new Option("Choose a glyph", ""));
+  detailGlyph.replaceChildren(new Option(t("Choose a glyph"), ""));
   for (const key of matchingGlyphs(font)) {
     detailGlyph.append(
       new Option(
@@ -352,7 +442,12 @@ function renderDetail() {
         input.checked,
       ]),
     );
-    detailImage.innerHTML = glyphDetail(font, key, options);
+    detailImage.innerHTML = glyphDetail(
+      font,
+      key,
+      options,
+      localeControl.value,
+    );
     const definition = font.glyphs[key];
     const resolved = getRuntime().layout(fonts, {
       text: String.fromCodePoint(Number.parseInt(key, 16)),
@@ -364,24 +459,24 @@ function renderDetail() {
     document.getElementById("detail-metrics").textContent =
       "U+" +
       key +
-      " · advance " +
+      t(" · advance ") +
       (resolved.glyphs[0]?.advance ??
         definition.advance ??
         font.metrics.defaultAdvance) +
-      " · baseline " +
+      t(" · baseline ") +
       font.metrics.baseline +
-      (definition.alias ? " · alias U+" + definition.alias : "") +
+      (definition.alias ? t(" · alias U+") + definition.alias : "") +
       (definition.composite
-        ? " · composite " +
+        ? t(" · composite ") +
           definition.composite.map((part) => "U+" + part.code).join(" + ")
         : "");
     document.getElementById("detail-status").textContent =
       resolved.glyphs[0]?.fontIndex === 0
         ? ""
-        : "This glyph could not be resolved in text layout.";
+        : t("This glyph could not be resolved in text layout.");
   } catch (error) {
     detailImage.replaceChildren();
-    document.getElementById("detail-status").textContent = error.message;
+    document.getElementById("detail-status").textContent = errorDetail(error);
   }
 }
 detailGlyph.addEventListener("change", renderDetail);
@@ -411,7 +506,7 @@ const cancelCompareLoad = bindFontInput(
     compareFonts = [candidate];
     document.getElementById("comparison-name").textContent = candidate.name;
     clearComparison.disabled = false;
-    return "Comparing with " + candidate.name + " · " + candidate.version;
+    return t("Comparing with ") + candidate.name + " · " + candidate.version;
   },
 );
 clearComparison.addEventListener("click", () => {
@@ -425,3 +520,39 @@ clearComparison.addEventListener("click", () => {
 });
 
 document.getElementById("script-status").hidden = true;
+
+function applyLanguage() {
+  document.documentElement.lang = localeControl.value;
+  document.title = "lineFONT · " + t("Font preview");
+  labels.forEach(([node, label]) => {
+    node.textContent = t(label);
+  });
+  named.forEach(([el, label]) => el.setAttribute("aria-label", t(label)));
+  glyphSearch.placeholder = t("Ґ or U+0490");
+  languageSearch.dispatchEvent(new Event("input"));
+  document.getElementById("font-metrics").textContent =
+    font.version +
+    t(" · cap height ") +
+    font.metrics.capHeight +
+    t(" · baseline ") +
+    font.metrics.baseline +
+    t(" · default advance ") +
+    font.metrics.defaultAdvance;
+  detailGlyph.options[0].textContent = t("Choose a glyph");
+  if (languageSelect.value) selectSample();
+  else {
+    sampleKind.textContent = "";
+    renderPhrase();
+  }
+  fontStatus.textContent =
+    compareStatus.textContent =
+    document.getElementById("copy-status").textContent =
+      "";
+  renderGlyphs();
+  renderDetail();
+}
+localeControl.addEventListener("change", applyLanguage);
+if (navigator.language?.startsWith("uk")) {
+  localeControl.value = "uk";
+  applyLanguage();
+}

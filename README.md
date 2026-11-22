@@ -9,3 +9,8 @@ The [Ukrainian and English font](fonts/bagLING-UA-EN/) and the [Greek letters fo
 The engine, bindings and tools are MIT. The specification, documentation, example font and bundled fonts are CC BY 4.0, credited to SABERBIRD. Preserve the license link and credit, and indicate changes when redistributing them. Third-party terms are in [THIRD_PARTY.txt](THIRD_PARTY.txt). [MIT](LICENSE) · [CC BY 4.0](LICENSES/CC-BY-4.0.txt)
 
 Use the `linefont-preview` CLI to generate an SVG specimen or an offline HTML preview with language samples, a 4 mm text sample, and enlarged glyph cards. [Preview instructions](spec/INTEGRATION.md#inspect-a-font) · [Reference layout cases](examples/conformance/)
+
+The development format `linefont/0.0.2` adds SVG Q/T, S and A to the original
+M/L/C profile. Applications can keep the authored paths, request a compatible
+whole font, or place text as polylines at a chosen tolerance.
+[Curve example](examples/Curves.lint) · [JSON Schema](spec/linefont.schema.json) · [Geometry API](spec/INTEGRATION.md#geometry-profiles-in-the-development-version)
