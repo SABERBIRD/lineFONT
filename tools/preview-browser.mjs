@@ -56,10 +56,17 @@ const kindLabels = {
   name: "Language name sample",
   unavailable: "Paste a sample for this language.",
 };
+const sampleSize = document.getElementById("sample-size");
+const saveSvg = document.getElementById("save-svg");
+const missingPanel = document.getElementById("missing-panel");
+const missingSymbols = document.getElementById("missing-symbols");
 let previewFrame;
 function renderPhrase() {
   const input = sampleInput.value;
   phrasePreview.replaceChildren();
+  saveSvg.disabled = true;
+  missingPanel.hidden = true;
+  missingSymbols.value = "";
   const empty = !input.trim();
   phrasePreview.toggleAttribute("hidden", empty);
   if (empty) {
@@ -74,20 +81,26 @@ function renderPhrase() {
       );
     }
     layoutPreview ??= loadLayout();
+    const pixels = sampleSize.valueAsNumber;
+    if (!Number.isFinite(pixels) || pixels < 12 || pixels > 96) {
+      throw Error("Choose a capital height from 12 to 96 px.");
+    }
+    const screenScale = pixels / 4;
     const result = layoutPreview(fonts, {
       text: input,
       height: 4,
       lineHeight: 7,
       wrapWidth: Math.max(
         20,
-        (document.getElementById("preview-scroll").clientWidth - 24) / 7,
+        (document.getElementById("preview-scroll").clientWidth - 24) /
+          screenScale,
       ),
       top: 0,
       style: font.style,
     });
     const { x, y, width, height } = result.bounds;
-    phrasePreview.setAttribute("width", `${(width + 4) * 7}px`);
-    phrasePreview.setAttribute("height", `${(height + 4) * 7}px`);
+    phrasePreview.setAttribute("width", `${(width + 4) * screenScale}px`);
+    phrasePreview.setAttribute("height", `${(height + 4) * screenScale}px`);
     phrasePreview.setAttribute(
       "viewBox",
       `${x - 2} ${y - 2} ${width + 4} ${height + 4}`,
@@ -118,8 +131,11 @@ function renderPhrase() {
       ).join(" ");
       return `${cluster} (${codes})`;
     });
+    missingSymbols.value = missing.join("\n");
+    missingPanel.hidden = missing.length === 0;
+    saveSvg.disabled = false;
     coverage.textContent = missing.length
-      ? "Missing from this sample · " + missing.join(", ")
+      ? "Missing character clusters · " + missing.length
       : "All characters in this sample are supported.";
   } catch (error) {
     phrasePreview.setAttribute("hidden", "");
@@ -147,3 +163,35 @@ if (typeof ResizeObserver === "function") {
 }
 sampleInput.value = sample;
 renderPhrase();
+
+sampleSize.addEventListener("input", renderPhrase);
+saveSvg.addEventListener("click", () => {
+  if (saveSvg.disabled) return;
+  const image = phrasePreview.cloneNode(true);
+  image.removeAttribute("id");
+  image.removeAttribute("hidden");
+  image.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  image.setAttribute("color", "#142b35");
+  const blob = new Blob([new XMLSerializer().serializeToString(image)], {
+    type: "image/svg+xml",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "lineFONT-sample.svg";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+document.getElementById("copy-missing").addEventListener("click", async () => {
+  const status = document.getElementById("copy-status");
+  try {
+    await navigator.clipboard.writeText(missingSymbols.value);
+    status.textContent = "Copied.";
+  } catch {
+    missingSymbols.focus();
+    missingSymbols.select();
+    status.textContent = "Selected. Use your device’s Copy command.";
+  }
+});

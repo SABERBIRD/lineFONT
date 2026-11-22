@@ -74,6 +74,8 @@ export async function htmlPreview(font, sample, sheet) {
   section { padding: 16px; background: white; border: 1px solid #b5c4ca; border-radius: 8px; }
   label { font-weight: 600; }
   input, select, textarea { display: block; width: 100%; border: 1px solid #778c97; border-radius: 4px; padding: 8px; font: inherit; color: inherit; background: white; }
+  button { font: inherit; padding: 8px 12px; cursor: pointer; }
+  [hidden] { display: none !important; }
   textarea { margin-bottom: 12px; resize: vertical; }
   #sample-kind, #coverage { margin: 4px 0 12px; overflow-wrap: anywhere; }
   #phrase-preview, #glyphs > svg { display: block; max-width: 100%; height: auto; }
@@ -97,7 +99,16 @@ export async function htmlPreview(font, sample, sheet) {
   <p id="sample-kind"></p>
   <label for="sample">Sample text</label>
   <textarea id="sample" rows="2" maxlength="500" spellcheck="false"></textarea>
-  <div id="preview-scroll"><svg id="phrase-preview" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sample at 4 mm cap height at 100% print scale"></svg></div>
+  <label for="sample-size">Capital height on screen (px)</label>
+  <input id="sample-size" type="number" min="12" max="96" step="1" value="28">
+  <div id="preview-scroll"><svg id="phrase-preview" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Font sample"></svg></div>
+  <button id="save-svg" type="button" disabled>Download sample SVG</button>
+  <div id="missing-panel" hidden>
+    <label for="missing-symbols">Missing characters and Unicode codes</label>
+    <textarea id="missing-symbols" readonly rows="3"></textarea>
+    <button id="copy-missing" type="button">Copy missing characters</button>
+    <p id="copy-status" role="status"></p>
+  </div>
   <p id="coverage" role="status">To render this sample interactively, open the downloaded HTML in a browser with JavaScript enabled.</p>
 </section>
 <section id="glyphs" aria-label="Glyph cards">

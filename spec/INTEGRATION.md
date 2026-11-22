@@ -67,5 +67,8 @@ English name, native name, or language identifier. Each profile provides a short
 technical phrase about cutting, width, and angle. Translations are draft samples
 open to corrections from native speakers. Edit the JSON catalog to contribute
 another language. The editable sample reports missing grapheme clusters.
-On screen the cap height is 28 CSS pixels, with wrapping to the available width.
+On screen the cap height defaults to 28 CSS pixels and can be adjusted from 12 to
+96 pixels, with wrapping to the available width. Missing clusters and their Unicode
+codes appear in a copyable list. Download the current sample as SVG using the
+preview’s displayed size and line breaks.
 The installed CLI accepts the same options as `linefont-preview`.
