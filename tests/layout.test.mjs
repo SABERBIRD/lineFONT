@@ -30,7 +30,7 @@ test('fallback and ranking preserve distinct fonts with equal IDs', () => {
 test('composes diacritics within one font and keeps UTF-16 ranges', () => {
   const base = font({ '0406': { ...stroke, anchors: { top: { x: 2, y: -1 } } } });
   const mark = font({ '0308': { d: 'M-1 -1 L1 -1', advance: 0, attach: { x: 0, y: 0 } } });
-  const combined = font({ ...base.glyphs, ...mark.glyphs });
+  const combined = font({ ...base.glyphs, ...mark.glyphs, '0020': { d: '', advance: 4 } });
   const value = 'Ї Ї 😀';
   const result = layout([combined], { ...options, text: value });
   assert.equal(result.glyphs[0].commands.length, 4);
