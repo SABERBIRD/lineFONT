@@ -1,15 +1,23 @@
 // Inlined by preview-html.mjs.
-const { font, sample, samples } = JSON.parse(
-  document.getElementById("preview-data").textContent,
-);
-const fonts = [font];
+const {
+  font: initialFont,
+  page: initialPage,
+  sample,
+  samples,
+} = JSON.parse(document.getElementById("preview-data").textContent);
+let font = initialFont;
+let fonts = [font];
 const languageSelect = document.getElementById("language");
 const sampleInput = document.getElementById("sample");
 const sampleKind = document.getElementById("sample-kind");
 const phrasePreview = document.getElementById("phrase-preview");
 const coverage = document.getElementById("coverage");
 const samplesById = new Map(samples);
-let layoutPreview;
+let runtime;
+function getRuntime() {
+  runtime ??= loadLayout();
+  return runtime;
+}
 const languageSearch = document.getElementById("language-search");
 const languageChoices = Array.from(
   languageSelect.querySelectorAll("optgroup"),
@@ -80,13 +88,13 @@ function renderPhrase() {
         "Open the downloaded HTML in a browser with WebAssembly support.",
       );
     }
-    layoutPreview ??= loadLayout();
+
     const pixels = sampleSize.valueAsNumber;
     if (!Number.isFinite(pixels) || pixels < 12 || pixels > 96) {
       throw Error("Choose a capital height from 12 to 96 px.");
     }
     const screenScale = pixels / 4;
-    const result = layoutPreview(fonts, {
+    const result = getRuntime().layout(fonts, {
       text: input,
       height: 4,
       lineHeight: 7,
@@ -195,3 +203,82 @@ document.getElementById("copy-missing").addEventListener("click", async () => {
     status.textContent = "Selected. Use your device’s Copy command.";
   }
 });
+
+const glyphSearch = document.getElementById("glyph-search");
+const glyphSheet = document.getElementById("glyph-sheet");
+const previousPage = document.getElementById("glyph-prev");
+const nextPage = document.getElementById("glyph-next");
+const glyphPage = document.getElementById("glyph-page");
+const fontStatus = document.getElementById("font-status");
+let currentPage = initialPage;
+let totalPages = 1;
+function updateGlyphControls() {
+  const count = matchingGlyphs(font, glyphSearch.value).length;
+  totalPages = Math.max(1, Math.ceil(count / 40));
+  currentPage = Math.min(currentPage, totalPages);
+  previousPage.disabled = currentPage <= 1;
+  nextPage.disabled = currentPage >= totalPages;
+  glyphPage.textContent = count
+    ? "Page " + currentPage + " / " + totalPages + " · " + count + " glyphs"
+    : "No matching glyphs";
+}
+function renderGlyphs() {
+  updateGlyphControls();
+  try {
+    glyphSheet.innerHTML = specimen(font, "", currentPage, glyphSearch.value);
+  } catch (error) {
+    fontStatus.textContent = "Cannot render glyphs · " + error.message;
+  }
+}
+glyphSearch.addEventListener("input", () => {
+  currentPage = 1;
+  renderGlyphs();
+});
+previousPage.addEventListener("click", () => {
+  currentPage--;
+  renderGlyphs();
+});
+nextPage.addEventListener("click", () => {
+  currentPage++;
+  renderGlyphs();
+});
+let fileRequest = 0;
+document
+  .getElementById("font-file")
+  .addEventListener("change", async (event) => {
+    const request = ++fileRequest;
+    const file = event.target.files[0];
+    if (!file) return;
+    fontStatus.textContent = "Opening " + file.name;
+    try {
+      if (file.size > 8_000_000) throw Error("Font file exceeds 8 MB");
+      const source = await file.text();
+      if (request !== fileRequest) return;
+      const candidate = getRuntime().parseFont(source);
+      const sheet = specimen(candidate, "", 1);
+      font = candidate;
+      fonts = [font];
+      glyphSearch.value = "";
+      currentPage = 1;
+      glyphSheet.innerHTML = sheet;
+      document.getElementById("font-name").textContent = font.name;
+      document.getElementById("font-metrics").textContent =
+        font.version +
+        " · cap height " +
+        font.metrics.capHeight +
+        " · baseline " +
+        font.metrics.baseline +
+        " · default advance " +
+        font.metrics.defaultAdvance;
+      updateGlyphControls();
+      renderPhrase();
+      fontStatus.textContent = "Opened " + file.name;
+    } catch (error) {
+      if (request !== fileRequest) return;
+      fontStatus.textContent = "Cannot open font · " + error.message;
+      renderPhrase();
+    } finally {
+      if (request === fileRequest) event.target.value = "";
+    }
+  });
+updateGlyphControls();

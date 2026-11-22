@@ -3,23 +3,8 @@ import { readFile } from "node:fs/promises";
 const read = (relative) => readFile(new URL(relative, import.meta.url), "utf8");
 const jsonScript = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
 
-export const escapeXml = (value) =>
-  String(value)
-    .replace(
-      /[^\u0009\u000A\u000D\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu,
-      "�",
-    )
-    .replace(
-      /[&<>"']/g,
-      (char) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&apos;",
-        })[char],
-    );
+import { escapeXml } from "./preview-xml.mjs";
+
 function languageOptions(samples) {
   return [
     ["Latn", "Latin"],
@@ -42,14 +27,27 @@ function languageOptions(samples) {
     .join("\n");
 }
 
-export async function htmlPreview(font, sample, sheet) {
-  const [binding, wasm, viewer, catalog, notices, license] = await Promise.all([
+export async function htmlPreview(font, sample, sheet, page = 1) {
+  const [
+    binding,
+    wasm,
+    viewer,
+    catalog,
+    notices,
+    license,
+    specimenSource,
+    boundsSource,
+    xmlSource,
+  ] = await Promise.all([
     read("../dist/index.js"),
     read("../dist/wasm.mjs"),
     read("./preview-browser.mjs"),
     read("./preview-language-samples.json"),
     read("./preview-language-samples.NOTICE.txt"),
     read("../LICENSES/Apache-2.0.txt"),
+    read("./preview-specimen.mjs"),
+    read("./preview-ink-bounds.mjs"),
+    read("./preview-xml.mjs"),
   ]);
   // Inline the build's WASM bytes so a file:// preview needs no server.
   const wasmImport = /^import bytes from ['"]\.\/wasm\.mjs['"];$/m;
@@ -60,6 +58,8 @@ export async function htmlPreview(font, sample, sheet) {
   const runtime = binding
     .replace(wasmImport, () => "const bytes = " + bytes + ";")
     .replace(/^export (?=function )/gm, "");
+  const browserSource = (source) =>
+    source.replace(/^import .*;\n/gm, "").replace(/^export /gm, "");
   const { samples } = JSON.parse(catalog);
   return `<!doctype html>
 <html lang="en">
@@ -78,17 +78,21 @@ export async function htmlPreview(font, sample, sheet) {
   [hidden] { display: none !important; }
   textarea { margin-bottom: 12px; resize: vertical; }
   #sample-kind, #coverage { margin: 4px 0 12px; overflow-wrap: anywhere; }
-  #phrase-preview, #glyphs > svg { display: block; max-width: 100%; height: auto; }
+  #phrase-preview, #glyph-sheet > svg { display: block; max-width: 100%; height: auto; }
   #phrase-preview { margin-bottom: 8px; max-width: none; }
   #preview-scroll { overflow: auto; margin-top: 12px; }
   #language-search { margin-bottom: 12px; }
   #phrase-preview[hidden] { display: none; }
   #glyphs { margin: 16px 0; }
-  #glyphs > svg { margin-top: 8px; }
+  #glyph-sheet > svg { margin-top: 8px; }
   pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
 <section aria-label="Sample">
-  <h1>${escapeXml(font.name)}</h1>
+  <h1 id="font-name">${escapeXml(font.name)}</h1>
+  <label for="font-file">Open a local .lint font</label>
+  <input id="font-file" type="file" accept=".lint,application/json">
+  <p id="font-status" role="status"></p>
+  <p id="font-metrics">${escapeXml(font.version)} · cap height ${font.metrics.capHeight} · baseline ${font.metrics.baseline} · default advance ${font.metrics.defaultAdvance}</p>
   <label for="language-search">Find a language</label>
   <input id="language-search" type="search" placeholder="English, Українська…" autocomplete="off">
   <label for="language">Sample language</label>
@@ -112,11 +116,17 @@ export async function htmlPreview(font, sample, sheet) {
   <p id="coverage" role="status">To render this sample interactively, open the downloaded HTML in a browser with JavaScript enabled.</p>
 </section>
 <section id="glyphs" aria-label="Glyph cards">
-  ${sheet}
+  <label for="glyph-search">Find a glyph by character or Unicode code</label>
+  <input id="glyph-search" type="search" placeholder="Ґ or U+0490" autocomplete="off">
+  <button id="glyph-prev" type="button">Previous page</button>
+  <span id="glyph-page" role="status"></span>
+  <button id="glyph-next" type="button">Next page</button>
+  <div id="glyph-sheet">${sheet}</div>
 </section>
 <details><summary>Language sample credits</summary><pre>${escapeXml(notices + "\n" + license)}</pre></details>
 <script type="application/json" id="preview-data">${jsonScript({
     font,
+    page,
     sample,
     samples: samples.map(({ id, kind, text }) => [id, { kind, text }]),
   })}</script>
@@ -124,8 +134,12 @@ export async function htmlPreview(font, sample, sheet) {
 (() => {
 function loadLayout() {
 ${runtime}
-return layout;
+return { layout, parseFont };
 }
+${browserSource(xmlSource)}
+${browserSource(boundsSource)}
+const layout = (...args) => getRuntime().layout(...args);
+${browserSource(specimenSource)}
 ${viewer}
 })();
 </script>

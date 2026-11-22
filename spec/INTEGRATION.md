@@ -72,3 +72,10 @@ On screen the cap height defaults to 28 CSS pixels and can be adjusted from 12 t
 codes appear in a copyable list. Download the current sample as SVG using the
 preview’s displayed size and line breaks.
 The installed CLI accepts the same options as `linefont-preview`.
+
+Use **Open a local .lint font** to replace the current font after core validation.
+The sample text and screen size are preserved. Invalid files report the error and
+keep the previous font available. The file limit is 8 MB.
+Glyph cards support page navigation and filtering by a literal character or a
+hexadecimal code, such as Ґ, 0490, or U+0490. The same renderer generates the CLI
+SVG and the browser cards, including their stroke bounds and shared baseline.
