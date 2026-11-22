@@ -41,8 +41,6 @@ export async function htmlPreview(font, sample, sheet) {
   #phrase-preview { margin-bottom: 8px; }
   #phrase-preview[hidden] { display: none; }
   #glyphs { margin: 16px 0; }
-  #glyphs label { display: block; }
-  #glyphs.show-bounds .glyph-layout-bounds { display: inline; }
   #glyphs > svg { margin-top: 8px; }
   pre { white-space: pre-wrap; overflow-wrap: anywhere; }
 </style>
@@ -57,7 +55,6 @@ export async function htmlPreview(font, sample, sheet) {
   <p id="coverage" role="status">Enter text or choose a language.</p>
 </section>
 <section id="glyphs" aria-label="Glyph cards">
-  <label><input type="checkbox" id="bounds"> Show layout bounds (purple dashes)</label>
   ${sheet}
 </section>
 <details><summary>Language sample credits</summary><pre id="notices"></pre></details>

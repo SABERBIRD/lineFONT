@@ -40,10 +40,9 @@ The Rust build normalizes local paths for reproducible WASM bytes. The font gene
 
 Generate an SVG specimen from a source checkout after running `npm run build`.
 Each page shows up to 40 glyphs at a shared scale with a fixed origin and baseline.
-The orange frame uses the default advance and cap height, so it stays in the same
-place for every glyph in the font. For a zero default advance it uses the cap
-height as its width. The green line still marks each glyph’s own advance.
-A card marks geometry or anchors that extend beyond its visible area.
+The orange frame encloses the font’s layout bounds and anchors across all glyphs,
+including descenders and accents. Every card uses that same frame, scale, origin,
+and baseline across pages. The green line marks each glyph’s own advance.
 
 The optional sample shows the requested text at 4 mm cap height at actual print size
 and lists missing clusters. Omit the sample for a glyph-only sheet. An empty string
@@ -64,6 +63,5 @@ Choose a Latin, Cyrillic, or Greek language profile to fill the editable sample.
 Profiles from [Google Fonts Languages](https://github.com/googlefonts/lang) use
 a short phrase where available, then alphabet exemplars or the language’s own
 name. Profiles without sample data accept pasted text. The coverage report lists
-missing grapheme clusters in the current sample. Use **Show layout bounds** to
-overlay the engine’s layout bounds, including logical advance space, on each card.
+missing grapheme clusters in the current sample.
 The installed CLI accepts the same options as `linefont-preview`.

@@ -30,50 +30,65 @@ const text = (x, y, value, size = 3) =>
 const line = (x1, y1, x2, y2, color) =>
   `<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${color}" stroke-width=".2" fill="none"/>`;
 
-function glyphCard(font, key, index) {
+function specimenGeometry(font, keys, shown) {
+  const { capHeight, baseline, defaultAdvance } = font.metrics;
+  const fonts = [font];
+  const visible = new Map(shown.map((key) => [key, null]));
+  let left = 0;
+  let top = 0;
+  let right = defaultAdvance;
+  let bottom = capHeight;
+
+  for (const key of keys) {
+    const definition = font.glyphs[key];
+    const result = layout(fonts, {
+      text: String.fromCodePoint(Number.parseInt(key, 16)),
+      height: capHeight,
+      lineHeight: capHeight,
+      top: 0,
+      style: font.style,
+    });
+    const glyph = result.glyphs[0];
+    const advance = glyph?.advance ?? definition.advance ?? defaultAdvance;
+    const anchors = Object.entries(definition.anchors ?? {});
+    if (definition.attach) anchors.push(["attach", definition.attach]);
+    right = Math.max(right, advance);
+    if (glyph?.fontIndex === 0) {
+      const { x, y, width, height } = result.bounds;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x + width);
+      bottom = Math.max(bottom, y + height);
+    }
+    for (const [, point] of anchors) {
+      const y = point.y + capHeight - baseline;
+      left = Math.min(left, point.x);
+      top = Math.min(top, y);
+      right = Math.max(right, point.x);
+      bottom = Math.max(bottom, y);
+    }
+    if (visible.has(key)) visible.set(key, { glyph, advance, anchors });
+  }
+
+  const width = right - left || capHeight;
+  const height = bottom - top;
+  const scale = Math.min(12 / capHeight, 32 / width, 17 / height);
+  const px = (x) => number(3 + (32 - width * scale) / 2 + (x - left) * scale);
+  const py = (y) => number(6.5 + (17 - height * scale) / 2 + (y - top) * scale);
+  const frame = `<rect class="glyph-reference-frame" x="${px(left)}" y="${py(top)}" width="${number(width * scale)}" height="${number(height * scale)}" stroke="#9a5a16" stroke-width=".25" fill="none"/>`;
+  return { visible, scale, px, py, frame };
+}
+
+function glyphCard(font, geometry, key, index) {
   const { capHeight, baseline } = font.metrics;
-  const definition = font.glyphs[key];
-  const result = layout([font], {
-    text: String.fromCodePoint(Number.parseInt(key, 16)),
-    height: capHeight,
-    lineHeight: capHeight,
-    top: 0,
-    style: font.style,
-  });
-  const glyph = result.glyphs[0];
+  const { visible, scale, px, py, frame } = geometry;
+  const { glyph, advance, anchors } = visible.get(key);
   const x = 6 + (index % 5) * 40;
   const y = Math.floor(index / 5) * 30;
-  const advance =
-    glyph?.advance ?? definition.advance ?? font.metrics.defaultAdvance;
-  const anchors = Object.entries(definition.anchors ?? {});
-  if (definition.attach) anchors.push(["attach", definition.attach]);
   const commands = glyph?.fontIndex === 0 ? glyph.commands : [];
-  const scale = Math.min(
-    12 / capHeight,
-    24 / Math.max(capHeight, font.metrics.defaultAdvance),
-  );
-  const px = (value) => number(7 + value * scale);
-  const py = (value) => number(8 + value * scale);
   const outline = commands.length
     ? `<path transform="translate(${px(0)} ${py(0)}) scale(${number(scale)})" d="${path(commands)}" fill="none" stroke="#142b35" stroke-width="${number(0.36 / scale)}"/>`
     : "";
-  const bounds = result.bounds;
-  const frame = `<rect class="glyph-reference-frame" x="${px(0)}" y="${py(0)}" width="${number((font.metrics.defaultAdvance || capHeight) * scale)}" height="${number(capHeight * scale)}" stroke="#9a5a16" stroke-width=".25" fill="none"/>`;
-  const layoutBounds =
-    glyph?.fontIndex === 0
-      ? `<rect class="glyph-layout-bounds" display="none" x="${px(bounds.x)}" y="${py(bounds.y)}" width="${number(bounds.width * scale)}" height="${number(bounds.height * scale)}" stroke="#72499d" stroke-width=".25" stroke-dasharray="1 .7" fill="none"/>`
-      : "";
-  const overflow =
-    glyph?.fontIndex === 0 &&
-    (px(bounds.x) < 1 ||
-      px(bounds.x + bounds.width) > 37 ||
-      py(bounds.y) < 5 ||
-      py(bounds.y + bounds.height) > 24.5 ||
-      anchors.some(([, point]) => {
-        const x = px(point.x);
-        const y = py(point.y + capHeight - baseline);
-        return x < 1 || x > 37 || y < 5 || y > 24.5;
-      }));
   const points = anchors
     .map(
       ([name, point]) =>
@@ -86,9 +101,9 @@ function glyphCard(font, key, index) {
     <svg x="0" y="5" width="38" height="19.5" viewBox="0 5 38 19.5" overflow="hidden">
       ${line(2, py(0), 36, py(0), "#9eafb7")}${line(2, py(capHeight), 36, py(capHeight), "#376a91")}
       ${line(px(0), 5, px(0), 24.5, "#9eafb7")}${line(px(advance), 5, px(advance), 24.5, "#267351")}
-      ${frame}${layoutBounds}${outline}${points}
+      ${frame}${outline}${points}
     </svg>
-    ${!glyph || glyph.fontIndex === null ? text(2, 26.5, "Unresolved in text layout", 2.2) : overflow ? text(2, 26.5, "Extends beyond card", 2.2) : ""}
+    ${!glyph || glyph.fontIndex === null ? text(2, 26.5, "Unresolved in text layout", 2.2) : ""}
   </g>`;
 }
 
@@ -100,6 +115,7 @@ function specimen(font, sample, page) {
   if (!Number.isInteger(page) || page < 1 || page > pages)
     throw Error(`Page must be 1–${pages}`);
   const shown = keys.slice((page - 1) * 40, page * 40);
+  const geometry = specimenGeometry(font, keys, shown);
   const sampleLayout = sample
     ? layout([font], {
         text: sample,
@@ -145,8 +161,8 @@ function specimen(font, sample, page) {
   `
       : ""
   }
-  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · reference frame")}
-  <g transform="translate(0 ${cardTop})">${shown.map((key, index) => glyphCard(font, key, index)).join("\n")}</g>
+  ${text(6, legendY, "Gray · cap top/origin   Blue · baseline   Green · advance   Magenta · anchor   Amber · font bounds")}
+  <g transform="translate(0 ${cardTop})">${shown.map((key, index) => glyphCard(font, geometry, key, index)).join("\n")}</g>
 </svg>\n`;
 }
 

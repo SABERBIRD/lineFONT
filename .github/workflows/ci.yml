@@ -46,6 +46,12 @@ jobs:
           frames = svg.findall(".//{*}rect[@class='glyph-reference-frame']")
           dimensions = {(f.get("x"), f.get("y"), f.get("width"), f.get("height")) for f in frames}
           assert len(frames) > 1 and len(dimensions) == 1
+          x, y, width, height = map(float, dimensions.pop())
+          anchors = svg.findall(".//{*}circle")
+          assert anchors
+          for anchor in anchors:
+              assert x <= float(anchor.get("cx")) <= x + width + 1e-6
+              assert y <= float(anchor.get("cy")) <= y + height + 1e-6
           PY
           npx --no-install linefont-preview --html node_modules/@saberbird/linefont/examples/conformance/primary.lint > specimen.html
           test -s specimen.html

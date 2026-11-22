@@ -116,11 +116,5 @@ sampleInput.addEventListener("input", () => {
   cancelAnimationFrame(previewFrame);
   previewFrame = requestAnimationFrame(renderPhrase);
 });
-document.getElementById("bounds").addEventListener("change", (event) => {
-  document
-    .getElementById("glyphs")
-    .classList.toggle("show-bounds", event.target.checked);
-});
-
 sampleInput.value = sample;
 renderPhrase();
