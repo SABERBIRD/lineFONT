@@ -1,11 +1,11 @@
-# Натурна перевірка крапки
+# Physical dot test
 
-Підготуйте два варіанти одного пробного символу з однаковим кроком. Один
-малює короткий штрих, другий — мале кільце. Намалюйте обидва варіанти поряд
-із літерами при висотах великих літер 2, 4 і 8 мм. Використайте однакові
-перо, матеріал, контролер та налаштування руху для обох варіантів.
+Prepare two versions of the same test character with equal advance. Draw
+one as a short stroke and the other as a small ring. Plot both alongside
+letters with capital heights of 2, 4 and 8 mm. Use the same pen, material,
+controller and motion settings for both variants.
 
-Запишіть діаметр пера, параметри руху й фактичний вигляд позначок. Перевірте
-чи видно крапку, чи немає розмазування та чи підіймалося перо між окремими
-штрихами. Збережіть фото й вихідний файл разом із результатами. Лише після
-натурного вимірювання варто рекомендувати форму або мінімальний розмір.
+Record the pen diameter, motion settings and appearance of the marks.
+Check dot visibility, smearing and pen lifts between separate strokes.
+Keep photos and the source file with the results. Use the physical
+measurements to recommend a shape or minimum size.

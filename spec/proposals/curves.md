@@ -1,30 +1,43 @@
-# Розширена геометрія штрихів
+# Extended stroke geometry
 
-Історія пропозиції. Команди Q/T, C/S та A, вихід M/L або M/L/C і допуск апроксимації реалізовано в [linefont/0.0.2](../FORMAT.md). Вузлові B-сплайни, NURBS і передача вихідної дуги з матрицею розміщення залишаються пропозиціями.
+The proposal introduced Q/T, C/S and A, M/L or M/L/C output, and an
+approximation tolerance. These are implemented in [linefont/0.0.2](../FORMAT.md).
+B-splines with knot vectors, NURBS and returning original arcs with their
+placement transforms remain proposals.
 
-## Геометрія у файлі
+## Geometry in the file
 
-Зберігати вихідну геометрію автора. Для послідовності абсолютних команд SVG пропонується такий набір:
+Preserve the author's original geometry. The proposal adds these absolute
+SVG commands.
 
-| Команда | Геометрія |
+| Command | Geometry |
 | --- | --- |
-| M, L, C | Початок штриха, пряма та кубічна Безьє з чинного формату |
-| Q | Квадратична Безьє з однією контрольною точкою |
-| A | Дуга еліпса за правилами SVG: два радіуси, поворот осей, вибір великої дуги, напрям і кінцева точка |
+| M, L, C | Stroke start, line and cubic Bézier from the original format |
+| Q | Quadratic Bézier with one control point |
+| A | SVG elliptical arc with two radii, axis rotation, large-arc flag, sweep flag and endpoint |
 
-Коло є випадком A з рівними радіусами. Повне коло задається двома дугами. Для нульового радіуса застосовується пряма, для однакових кінців команда A не додає сегмента. Прапорці мають значення 0 або 1.
+Equal radii give a circle. Two arcs form a full circle. A zero radius gives
+a straight segment. Identical endpoints add no segment. Both flags are 0 or 1.
 
-Для першого сплайнового розширення пропонується кускова кубічна Безьє: послідовність C уже підтримує її геометрію. Якщо авторові потрібні редаговані вузли іншого типу, формат має явно зберігати сімейство сплайна та його параметри. Наприклад, кубічному B-сплайну потрібні контрольні точки й вузловий вектор, а NURBS додатково потребує ваг. Узагальнена назва «сплайн» не визначає форми кривої.
+A sequence of existing C commands represents a piecewise cubic Bézier spline.
+Editable knots of other types require the spline family and parameters.
+A cubic B-spline needs control points and a knot vector. NURBS also need
+weights.
 
-## Розкладка й обмін
+## Layout and interchange
 
-Розглядаються два результати одного читача. Точне представлення повертає вихідний тип сегмента разом з його афінним перетворенням. Воно потрібне для точного експорту дуг та повторного редагування. Сумісний результат повертає M/L/C для наявних споживачів.
+A reader may return exact segment types with affine placement transforms for
+arc export and further editing. A compatibility output uses M/L/C.
 
-Квадратична Безьє перетворюється на кубічну точно. Нераціональний кубічний B-сплайн можна точно розбити на кубічні сегменти Безьє вставленням вузлів. Для дуг та загальних раціональних кривих сумісний результат потребує апроксимації. Перед реалізацією потрібно визначити допустиме відхилення в одиницях результату, правила після масштабування та поведінку при вичерпанні ліміту команд. Вихідні дані шрифту зберігаються під час формування обох результатів.
+A quadratic Bézier converts exactly to a cubic. A nonrational cubic B-spline
+can be split exactly into cubic Bézier segments by knot insertion. Arcs and
+general rational curves need approximation in compatibility output. Define
+the permitted deviation in output units, how scaling affects it and behavior
+at the command limit. Both outputs preserve the source font data.
 
-## Критерії прийняття
+## Acceptance criteria
 
-- Читач розрізняє версії. Наявні файли linefont/1 зберігають геометрію, порядок штрихів і кроки.
-- Спільні приклади для незалежних реалізацій охоплюють Q, обидва напрями A, великі й малі дуги, повернутий еліпс, повне коло та вироджені випадки.
-- Тести перевіряють межі й похибку після нахилу, відбиття та нерівномірного масштабу.
-- Експорт оголошує, чи передає точну геометрію, чи застосовує апроксимацію. Помилка точності або перевищений ліміт мають явну діагностику.
+- Readers distinguish versions and preserve geometry, stroke order and advances for existing linefont/1 files.
+- Shared fixtures cover Q, both A sweeps, large and small arcs, rotated ellipses, full circles and degenerate cases.
+- Tests cover bounds and error after shear, reflection and nonuniform scaling.
+- Exports state whether they preserve exact geometry or approximate it. Accuracy failures and command-limit violations produce explicit diagnostics.

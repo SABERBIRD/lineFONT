@@ -1,64 +1,68 @@
-# План розвитку lineFONT
+# lineFONT roadmap
 
-Найближча мета — пройти шлях внеску одного гліфа від SVG-шаблону (21) до перевіреного .lint (22 → 25). Режим «Напис» (31) доступний. Фізичні перевірки описано в пункті 28.
+The next milestone is contributing a glyph from an SVG template (21) and
+getting a validated .lint file back (22 → 25). Inscription mode (31) is
+available. See item 28 for physical tests.
 
-Номери пунктів збережено для посилань. Усередині розділів відкриті завдання подано в рекомендованому порядку. Релізи створюються лише за запитом користувача. Зміни схеми .lint потребують рішення щодо версії формату.
+Item numbers are stable references. Open items are listed in recommended
+order within each section. Releases are created on request. Changes to the
+.lint schema require a format-version decision.
 
-## Найближчі функції
+## Near-term features
 
-- [ ] **22. Імпорт SVG.** Трансформації, одиниці, перетворення у M/L/C та повідомлення про втрати. Після імпорту SVG одного гліфа показати траєкторію пера. Якщо штрих перетворено на контур із двома краями, пояснити ризик подвійного проходу й дати автору перевірити малюнок. Плаский експорт шрифту розгортає alias і composite у траєкторії зі збереженням кроку.
-- [ ] **25. Посібник автора.** Редагування окремого гліфа з перевіркою результату, каталог шрифтів із ліцензіями та покриттям. Наскрізний приклад SVG → .lint → композиція → PR. Для внеску однієї Ґ автор повертає відредагований шаблон у переглядач, перевіряє «Ґ Г ґ» і «ґвинт» та завантажує перевірений файл .lint. Базовий посібник для редагування .lint уже доступний у [docs/font-authors.md](docs/font-authors.md).
+- [ ] **22. SVG import.** Handle transforms, units, M/L/C conversion and report conversion losses. Show the pen path after importing a glyph. If a stroke was outlined as two edges, explain the risk of a double pass and let the author inspect it. Flat font export expands aliases and composites into paths while preserving advances.
+- [ ] **25. Font author guide.** Document single-glyph editing and verification. Provide a font catalog with licenses and coverage, and an end-to-end SVG → .lint → composition → PR example. To contribute Ґ, import the edited template, check «Ґ Г ґ» and «ґвинт», then download the validated .lint. The [basic guide](docs/font-authors.md) already covers manual .lint editing.
 
-## Просте підключення до інших програм
+## Application integration
 
-- [ ] **26. Підключення зі сторонньої програми.** Перший сценарій для кожної мови — завантажити .lint, задати текст і висоту, отримати штрихи й перелік пропусків. Для Rust додати типізований конструктор запиту з типовими параметрами та підготувати crate для встановлення через Cargo. Перевіряти приклади в чистому проєкті (п. 38).
-- [ ] **39. Посібник для авторів мовних прив’язок.** Описати вибір між Rust API, WASM та C ABI на прикладі одного адаптера. Показати володіння буферами, обробку помилок і перемикання між двома документами. Перевірити однакові штрихи, UTF-16 позиції й пропуски на еталонах з п. 17.
-- [ ] **27. Прив’язки C та Python.** Базовий приклад C для Linux додано. Узгодити цільові ОС і архітектури. Для C/C++ підготувати бінарні збірки з заголовком та CMake target і спростити доступ до штрихів та помилок через типізований API. Для Python підготувати wheels із вбудованим ядром. На кожній заявленій платформі перевірити першу розкладку без локального збирання ядра.
-- [ ] **40. Командний рядок для пакетної обробки.** Для програм, які вміють викликати зовнішній процес, додати команду розкладки тексту з файлу або stdin. Вказати шрифт і висоту, отримати SVG напису або JSON зі штрихами. Перевірити одиниці SVG, багаторядковий текст і ненульовий код завершення для пошкодженого шрифту.
-- [ ] **38. Перевірка прикладів під час випуску.** У CI запускати приклади з документації як сторонні програми. JS встановлює зібраний tarball, Rust підключає crate, C компілюється з публічним заголовком і бібліотекою. Звіряти кількість гліфів, пропуски й наявність штрихів. Перед випуском звірити таблицю версій та команди з артефактами тегу.
-- [ ] **41. Таблиця підтримуваних інтеграцій.** Для кожного випущеного пакета вказати мову, ОС, архітектуру, команду встановлення та посилання на перевірений мінімальний приклад. Оновлювати за результатами встановлення релізних артефактів у чистому середовищі (п. 38).
+- [ ] **26. External application quickstarts.** For each language, load a .lint, supply text and height, then inspect strokes and missing characters. Add a typed Rust request constructor with defaults and prepare the crate for Cargo installation. Test examples from clean projects (38).
+- [ ] **39. Guide for binding authors.** Show how to choose between Rust, WASM and C ABI using one adapter. Cover buffer ownership, errors and switching between two documents. Compare strokes, UTF-16 positions and missing clusters against item 17's fixtures.
+- [ ] **27. C and Python bindings.** A Linux C example exists. Decide supported operating systems and architectures. Provide C/C++ binaries, headers and a CMake target, plus typed access to strokes and errors. Provide Python wheels containing the core. Run a first layout on each supported platform without a local core build.
+- [ ] **40. Batch CLI.** Read text from a file or stdin, take a font and height, and return inscription SVG or stroke JSON. Test SVG units, multiline input and a nonzero exit status for an invalid font.
+- [ ] **38. Release integration checks.** Run documented examples in clean consumer projects. JS installs the tarball, Rust consumes the crate and C compiles against public headers and the library. Check glyph counts, missing clusters and strokes, plus the version table and instructions against tagged artifacts.
+- [ ] **41. Integration support matrix.** For each released package, document language, OS, architecture, installation command and verified minimal example. Update the table based on clean installation checks (38).
 
-## Сумісність, інтеграція й супровід
+## Compatibility and maintenance
 
-- [ ] **20. Сумісність версій.** Зміни геометрії, метрик, невідомих полів і відтворення документів.
-- [ ] **16. Політика Unicode.** Версія даних, порядок оновлення та поведінка непідтримуваних кластерів.
-- [ ] **15. Корпус діакритики.** NFC/NFD, кілька знаків, великі й малі літери, ненульовий baseline.
-- [ ] **17. Відтворювана розкладка.** Спільний корпус Rust, JS/WASM і C із допустимою числовою похибкою. Еталони JS уже є в `examples/conformance/`. Наступний крок — прогнати ті самі вектори через Rust і C та порівняти штрихи, метрики й позиції курсора.
-- [ ] **35. Окреме складання переглядача.** Виділити браузерну точку входу й модулі переглядача в `apps/preview/`. Замінити переписування import/export регулярними виразами на збирання модулів. Перевірити встановлений CLI, відкриття одного HTML через file:// без мережі та однакову геометрію карток у HTML і SVG.
-- [ ] **36. Межа між ядром та ABI.** Винести JSON-диспетчер, керування буферами й стан потоку з `core/src/lib.rs` в окремий модуль. Публічні сигнатури, відповіді й діагностики звірити на корпусі п. 17.
-- [ ] **18. Ліміти та fuzzing.** Пошкоджені файли, композиції, кількість команд, час і пам’ять.
+- [ ] **20. Version compatibility.** Cover geometry, metrics, unknown fields and document reproduction.
+- [ ] **16. Unicode policy.** Record the data version, update process and unsupported-cluster behavior.
+- [ ] **15. Diacritic corpus.** Cover NFC/NFD, multiple marks, uppercase and lowercase, and a nonzero baseline.
+- [ ] **17. Reproducible layout.** Use common Rust, JS/WASM and C fixtures with numeric tolerances. Run the JS fixtures in `examples/conformance/` through Rust and C and compare strokes, metrics and caret positions.
+- [ ] **35. Separate preview build.** Move the browser entry point and modules into `apps/preview/`. Replace regex-based import/export rewriting with module bundling. Test the installed CLI, a self-contained HTML file opened offline via file://, and matching card geometry in HTML and SVG.
+- [ ] **36. Core and ABI boundary.** Move JSON dispatch, buffer management and thread state out of `core/src/lib.rs`. Check public signatures, responses and diagnostics against the item 17 corpus.
+- [ ] **18. Limits and fuzzing.** Cover malformed files, composites, command counts, time and memory.
 
-## Перевірки з авторами та на пристроях
+## Author and device checks
 
-- [ ] **8. Мобільна доступність — частково виконано.** Збільшені цілі дотику, видимий фокус, клавіатурне відкриття карток, локальне прокручування та повідомлення при блокуванні скриптів реалізовані. Перевірено Chromium із сенсорним введенням при ширині 320 px. Залишилися фізичні Android та iOS, системний вибір файлу, масштабування жестом, копіювання й завантаження SVG на цих пристроях.
-- [ ] **10. Якість мовних зразків — частково виконано.** Для 19 мов є технічна фраза та окрема перевірка абетки. Очікується перевірка носіями, статус кожного зразка зберігається в каталозі.
-- [ ] **24. CI внесків шрифтів.** Валідація, повнота блоків, ліцензія та артефакти рев’ю.
-- [ ] **23. Порівняння версій.** Зміни гліфів, advance та anchors із візуальним накладанням.
-- [ ] **28. Фізичні перевірки.** Плотер і гравер, малі розміри, відкриті штрихи, піднімання інструмента й діакритика. Опублікувати напис «Ґвинт М3 · ⌀6 ±0,1 мм · 45° · αβ» заввишки 2, 3 і 4 мм, вихідний текст, використані шрифти, SVG, PDF і фото результату з указаною товщиною пера. На фото перевірити читабельність коми, крапки та діакритики.
+- [ ] **8. Mobile accessibility, partly complete.** Larger touch targets, visible focus, keyboard card access, local scrolling and a script-blocking notice are implemented. Tested in Chromium at 320 px with touch input. Verify file picking, pinch zoom, copying and SVG download on physical Android and iOS devices.
+- [ ] **10. Language sample quality, partly complete.** There are technical phrases and separate alphabet checks for 19 languages. Native-speaker review is pending. Each sample's status is stored in the catalog.
+- [ ] **24. CI for font contributions.** Validate fonts, block completeness and licenses. Generate review artifacts.
+- [ ] **23. Compare versions.** Show changes in glyphs, advances and anchors with a visual overlay.
+- [ ] **28. Physical tests.** Check small sizes, open strokes, tool lifts and diacritics on a plotter and engraver. Publish «Ґвинт М3 · ⌀6 ±0,1 мм · 45° · αβ» at 2, 3 and 4 mm, with source text, fonts, SVG, PDF, pen width and photos. Check that commas, periods and diacritics are legible in the photos.
 
-## Наступні можливості та залежності
+## Later features and dependencies
 
-- [ ] **34. Рекомендований крок рядків.** Узгодити необов’язкову метрику шрифту в його власних одиницях і правило для наявних файлів. Переглядач масштабує рекомендацію за обраною висотою літер і дозволяє змінити міжряддя вручну. Перевірити на українських виносних елементах та грецьких літерах із наголосами.
-- [ ] **32. DXF готового напису.** Після SVG і PDF додати експорт штрихів як звичайної CAD-геометрії. Відкрити результат у сторонній CAD-програмі й перевірити фізичні розміри та відкриті траєкторії.
-- [ ] **33. Імпорт цілих шрифтів.** Спочатку підтримати SVG-шрифти, сумісні з Hershey Text, потім LFF із LibreCAD. Переносити Unicode-відповідності й метрики та показувати втрати перетворення. Для неповного обов’язкового блоку перелічити відсутні знаки й запропонувати доповнити блок або пропустити його цілком. Підтримку SHP/SHX розглянути за конкретним запитом користувачів AutoCAD.
-- [ ] **30. MCP-адаптер.** Після стабілізації API інструментів надати валідацію, покриття, порівняння та зразки з лімітами ресурсів.
+- [ ] **34. Recommended line height.** Define an optional metric in font units and a rule for existing files. Scale it with capital height and allow manual adjustment. Test Ukrainian overhangs and accented Greek letters.
+- [ ] **32. Inscription DXF.** After SVG and PDF, export strokes as standard CAD geometry. Open the result in an external CAD application and check physical dimensions and open paths.
+- [ ] **33. Whole-font import.** Start with Hershey Text-compatible SVG fonts, then LibreCAD LFF. Preserve Unicode mappings and metrics and report conversion losses. List missing characters in incomplete mandatory blocks and let the author complete or omit the whole block. Consider SHP/SHX when AutoCAD users request it.
+- [ ] **30. MCP adapter.** Once the tool APIs stabilize, provide validation, coverage, comparison and specimens with resource limits.
 
-## Виконано
+## Completed
 
-- [x] **21. SVG-шаблон гліфа.** Переглядач завантажує шаблон для вибраного шрифту й символу з його метриками, напрямними й метаданими. Посібник автора пояснює п’ять цілісних блоків, вільні символи, ліцензію та мінімальний .lint.
-- [x] **31. Режим «Напис» в офлайн-переглядачі.** Багаторядковий текст, імпорт UTF-8 .txt, параметри в міліметрах, переноси, SVG та односторінковий PDF. У Chromium перевірено останній рядок, розміри сторінки та відкриті штрихи. Фізичний друк у масштабі 100 % і прохід пера не тестувалися.
-- [x] **37. Початок роботи за ролями.** Три входи в README, таблиця стабільної та розробницької версій, окремі посібники з інтеграції, авторства й перегляду. Додано приклади JS, Rust і C.
-- [x] **1. Екранний розмір зразка.** Висота великих літер 12–96 CSS px, перенос під доступну ширину.
-- [x] **2. Список відсутніх символів.** Оригінальні кластери та Unicode-коди з можливістю копіювання.
-- [x] **3. Збереження SVG зразка.** Поточна фраза, розмір і переноси відтворюються у файлі.
-- [x] **4. Локальний файл .lint у HTML.** Валідація ядром, оновлення метрик, фрази та карток, відновлення після помилки.
-- [x] **5. Пошук гліфів.** Усі сторінки, пошук за символом і Unicode-кодом без повторної генерації HTML.
-- [x] **6. Докладна картка гліфа.** Перемикачі траєкторій, напрямів, контрольних точок, advance та anchors.
-- [x] **7. Порівняння двох шрифтів.** Одна фраза, висота та параметри розкладки.
-- [x] **9. Локалізації перегляду.** Узгоджені українські й англійські підписи, помилки та доступні назви.
-- [x] **11. API точних меж штрихів.** Екстремуми кривих у Rust, спільні приклади для прив’язок, перегляду та експорту.
-- [x] **12. JSON Schema.** Структурна схема та визначена межа геометричної валідації.
-- [x] **13. Структуровані діагностики.** Код помилки, шлях поля, Unicode гліфа та позиція команди.
-- [x] **14. Звіт покриття мов.** Абетки та комбіновані знаки, прямі гліфи, композиції й відсутні символи.
-- [x] **19. Вимірювання швидкодії.** Великі тексти й колекції, реєстрація шрифтів, пошук і розкладка.
-- [x] **29. Оптимізація маршруту.** Довжина холостого ходу, контроль результату й збереження канонічного порядку.
+- [x] **21. Glyph SVG template.** Download a template for a selected font and character with metrics, guides and metadata. The author guide covers the five complete blocks, free characters, licensing and a minimal .lint.
+- [x] **31. Offline inscription mode.** Multiline text, UTF-8 .txt import, millimetre controls, wrapping, SVG and single-page PDF. Chromium checks cover the last line, page dimensions and open strokes. Physical printing at 100% and pen passes have not been tested.
+- [x] **37. Getting started by task.** Three README entry points, a version table, separate integration, authoring and preview guides, and JS, Rust and C examples.
+- [x] **1. On-screen specimen size.** Capital height 12–96 CSS px with wrapping to available width.
+- [x] **2. Missing characters.** Show original clusters and Unicode codes with a copy action.
+- [x] **3. Specimen SVG download.** Preserve the current phrase, size and line breaks.
+- [x] **4. Local .lint in HTML.** Validate with the core, update metrics, phrase and cards, and recover after errors.
+- [x] **5. Glyph search.** Search all pages by character or Unicode code without regenerating the HTML.
+- [x] **6. Glyph detail.** Toggle paths, directions, control points, advance and anchors.
+- [x] **7. Two-font comparison.** Use a shared phrase, height and layout settings.
+- [x] **9. Preview localization.** Ukrainian and English labels, errors and accessible names.
+- [x] **11. Exact ink bounds API.** Rust curve extrema and shared examples for bindings, preview and export.
+- [x] **12. JSON Schema.** Structural schema and a defined boundary for geometry validation.
+- [x] **13. Structured diagnostics.** Error code, field path, glyph Unicode and command position.
+- [x] **14. Language coverage.** Alphabets, combining marks, direct and composed glyphs, and missing characters.
+- [x] **19. Performance measurement.** Large texts and collections, font registration, lookup and layout.
+- [x] **29. Route optimization.** Pen-up travel distance, result checks and preservation of canonical order.

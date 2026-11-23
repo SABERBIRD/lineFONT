@@ -35,4 +35,4 @@ for a minimal font containing only Ґ.
 A standalone glyph is valid for a free symbol. The five complete-or-absent
 groups are digits, punctuation and dashes, brackets, quotation marks, and
 mathematical and technical symbols. Give a new font its own metadata and include
-the required credits and license. [Block rules](../spec/FORMAT.md#шість-блоків-пять-цілісних-і-вільний) · [Contributing](../CONTRIBUTING.md)
+the required credits and license. [Block rules](../spec/FORMAT.md#six-blocks) · [Contributing](../CONTRIBUTING.md)

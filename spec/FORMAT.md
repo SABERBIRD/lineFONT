@@ -1,70 +1,66 @@
-# Linefont: формат `.lint`
+# Linefont .lint format
 
-Формат розширеної геометрії — `linefont/0.0.2`. Початковий профіль має ідентифікатор `linefont/1`. `.lint` походить від LInefoNT.
-Файл — JSON у UTF-8 без BOM. Один файл містить один шрифт; шрифт може
-складатися з однієї літери. Геометрія описує центральні траєкторії пера.
-Початкова область: латиниця, кирилиця, грецька та технічні знаки.
+The extended geometry profile uses `linefont/0.0.2`. The original profile uses
+`linefont/1`. The extension .lint comes from LInefoNT. Each UTF-8 JSON file
+without a BOM contains one font, which may consist of a single letter.
+Geometry describes pen centerlines. The initial scope covers Latin, Cyrillic,
+Greek and technical symbols.
 
-## Метадані та ідентичність
+## Metadata and identity
 
-Обов’язкові поля: `format`, `id`, `name`, `version`, `authors`, `style`,
-`metrics`, `glyphs`. `style`: `upright` або `italic`.
-`license` — необов’язковий SPDX-вираз; відсутність поля не надає дозволу
-на розповсюдження. `description`, `languages`, `scripts`, `family` та розширення
-`x-…` можна зберігати як додаткові поля.
+Required fields are `format`, `id`, `name`, `version`, `authors`, `style`,
+`metrics` and `glyphs`. Valid styles are `upright` and `italic`. The optional
+`license` field accepts an SPDX expression. Redistribution requires
+permission. Additional fields may include `description`, `languages`,
+`scripts`, `family` and `x-…` extensions.
 
-`id` — авторська стабільна мітка лінії шрифту, наприклад
-`SABERBIRD/BaglingSingleLine01`. Це не номер із загального реєстру і не
-гарантія глобальної унікальності. Автор зберігає ID при оновленні шрифту,
-а версію змінює. Незалежному форку рекомендовано інший ID.
+The ID is a stable label assigned by the author, such as
+`SABERBIRD/BaglingSingleLine01`. Keep it when updating a font and change the
+version. Independent forks should choose another ID. IDs are locally assigned
+and may collide. Applications should allow different contents with the same
+ID or version to coexist. The reference implementation indexes normalized
+JSON with SHA-256 and compares the full normalized contents for deduplication.
+The first integration references fonts by position in the saved list.
 
-Програма не повинна замінювати файл лише через однакові ID чи версію.
-Еталонна реалізація обчислює SHA-256 нормалізованого JSON. Хеш — індекс
-для пошуку, не математична гарантія: при дедуплікації порівнюють повний
-нормалізований вміст. Різні файли з однаковим ID можуть співіснувати;
-посилання в першій інтеграції задаються позицією у збереженому списку.
+OpenType provides a string identifier in name ID 3, alongside family, style
+and PostScript names. Font identifiers have no mandatory universal UUID
+registry. [OpenType naming table](https://learn.microsoft.com/en-us/typography/opentype/spec/name)
 
-OpenType має рядковий Unique font identifier у name ID 3, а також назви
-сімейства, стилю й PostScript-ім’я. Загального обов’язкового UUID-реєстру
-для всіх шрифтів немає. Джерело:
-https://learn.microsoft.com/en-us/typography/opentype/spec/name
+## Metrics and geometry
 
-## Метрики й геометрія
+`metrics.capHeight` is the positive capital height in font coordinates.
+`baseline` gives the baseline Y coordinate. X increases rightward and Y
+downward. The cap top is `baseline - capHeight`. `defaultAdvance` is the
+nonnegative advance for glyphs without an explicit `advance`. The glyph
+origin lies on the left reference line. Advance moves the origin for the next
+character. Strokes may extend beyond it, particularly for marks and
+overhangs. Empty glyphs such as spaces may have positive advance.
 
-`metrics.capHeight` — додатна висота великих літер у координатах шрифту.
-`baseline` — координата Y базової лінії. Вісь X направлена праворуч,
-Y — вниз. Верх великих літер: `baseline - capHeight`.
-`defaultAdvance` — невід’ємний крок символів без власного `advance`.
-Початок координат гліфа розташований на лівій опорній вертикалі.
-Геометрія може виходити за межі кроку, зокрема для діакритики й виносів.
-Крок переміщує позицію початку наступного символу; він не задає межі штрихів.
-Порожній гліф, наприклад пробіл, може мати додатний крок. Видимі межі кривої
-можна обчислити за її екстремумами. Контрольні точки дають консервативні межі;
-поле `bounds` еталонної розкладки охоплює їх і логічний прямокутник напису.
-Для висоти великих літер H масштаб дорівнює H / capHeight. Базова лінія
-розміщеного рядка дорівнює top + H плюс номер рядка, помножений на міжряддя.
-Шрифт може зберігати додаткові метрики.
+Curve extrema give exact ink bounds. Control points give conservative bounds.
+The reference layout's `bounds` includes the control points and the logical
+text rectangle. At capital height H, the scale is H divided by capHeight.
+The baseline of a laid-out line is top + H plus the zero-based line number
+times line height. Fonts may store additional metrics.
 
-Ключ `glyphs` — Unicode scalar value, записаний великими шістнадцятковими
-цифрами, щонайменше чотирма: `0041`, `0407`, `1F600`. Сурогати заборонені.
-Unicode тексту не змінюється через відсутність гліфа чи спільний малюнок.
+Each `glyphs` key is a Unicode scalar value in uppercase hexadecimal with
+at least four digits, such as `0041`, `0407` or `1F600`. Surrogates are
+invalid. Missing and shared glyphs preserve the input text's Unicode values.
 
-Гліф має рівно один спосіб побудови:
+A glyph has exactly one of these representations.
 
-- `d`: SVG path з абсолютними командами. Початковий профіль підтримує `M`, `L`, `C`. Порядок і напрям штрихів
-  зберігаються. Кожна `M` задає нову початкову точку без проведення лінії
-  від попередньої точки. `L` проводить пряму, а `C` — кубічну криву від
-  поточної точки до кінцевої, задану двома контрольними точками. Замкнути траєкторію
-  можна явним поверненням до початкової точки через `L` чи `C`.
-  Для пристрою `M` означає переміщення без малювання; режими руху, маршрут
-  переміщень і фізична товщина штриха належать програмі керування.
-  Заливки немає. Порожній `d` дозволений, наприклад для пробілу.
-- `alias`: Unicode-ключ іншого гліфа в цьому файлі.
-- `composite`: масив `{ "code": "0406", "x": 0, "y": 0 }`, що задає
-  компоненти й зсуви в одиницях цього шрифту. Крок успадковується від
-  першого компонента, якщо не задано власний `advance`.
+- `d` gives an absolute SVG path. The original profile supports `M`, `L`
+  and `C`. Preserve stroke order and direction. `M` moves the pen without
+  drawing. `L` draws a line and `C` draws a cubic Bézier with two control
+  points. Close a path with an explicit line or curve back to its start.
+  The device controller handles pen movement, routing and physical stroke
+  width. Paths are unfilled. Empty `d` is valid for glyphs such as spaces.
+- `alias` gives another glyph's Unicode key in the same file.
+- `composite` gives a list of components such as
+  `{ "code": "0406", "x": 0, "y": 0 }`. Offsets use font units. The
+  first component supplies the advance unless the glyph specifies one.
 
-Приклад початкового профілю `linefont/1`, опублікованого з бібліотекою 0.0.1. Для нових команд кривих див. [приклад `linefont/0.0.2`](../examples/Curves.lint). Поле `version` у цих файлах задає версію конкретного шрифту.
+The following example uses `linefont/1`, published with library 0.0.1.
+The file's `version` describes this particular font. [Extended curve example](../examples/Curves.lint)
 
 ```json
 {
@@ -90,129 +86,125 @@ Unicode тексту не змінюється через відсутність
 }
 ```
 
-Циклічні посилання й глибина понад 32 заборонені. Невідомі додаткові поля
-не використовуються для малювання і зберігаються на рівні шрифту, метрик
-і гліфа. Розширення не можуть змінювати значення основних полів.
+References must be acyclic and at most 32 levels deep. Unknown extra fields
+are preserved on the font, metrics and glyph records and have no effect on
+drawing. Extensions cannot override core fields.
 
-## Шість блоків: п’ять цілісних і вільний
+## Six blocks
 
-| Блок | Повний набір |
+| Block | Complete set |
 | --- | --- |
-| Цифри | `0 1 2 3 4 5 6 7 8 9` |
-| Пунктуація й риски | `. , : ; … ! ? - – —` |
-| Дужки | `( ) [ ] { }` |
-| Лапки | `' " « » ‘ ’ ‚ “ ” „` |
-| Математика й технічні знаки | `+ − × ÷ = < > ≤ ≥ ≠ ≈ ± ∓ * / % ‰ ° ′ ″ ⌀` |
-| Вільний | Решта Unicode-символів у довільній кількості |
+| Digits | `0 1 2 3 4 5 6 7 8 9` |
+| Punctuation and dashes | `. , : ; … ! ? - – —` |
+| Brackets | `( ) [ ] { }` |
+| Quotation marks | `' " « » ‘ ’ ‚ “ ” „` |
+| Mathematical and technical symbols | `+ − × ÷ = < > ≤ ≥ ≠ ≈ ± ∓ * / % ‰ ° ′ ″ ⌀` |
+| Free | Remaining Unicode characters in any quantity |
 
-Кожен із перших п’яти блоків у файлі є повністю або відсутній.
-Вільний блок не має вимоги повноти. Це визначається Unicode-кодами,
-а не полем автора. Аліаси й явні композиції враховуються як наявні гліфи.
-Автоматично отримані композиції не зараховуються для валідації блоку.
-Пробіл не входить у блоки. Решта символів вільні; зокрема можна додати лише Ґ.
-Апостроф U+02BC не прирівнюється до U+2019. Риски U+002D/U+2013/U+2014
-відокремлені від математичного мінуса U+2212.
+A file includes each of the first five blocks in full or omits it entirely.
+Unicode code points determine membership. Aliases and explicit composites
+count toward completeness. Automatically composed glyphs are excluded from
+this count. Space lies outside these blocks. Free characters may be supplied
+individually, for example Ґ. U+02BC and U+2019 are distinct. U+002D, U+2013
+and U+2014 are distinct from the mathematical minus U+2212.
 
-Явне покриття визначається ключами `glyphs`. Композиція може розширити покриття
-розкладки. Метадані `languages` та `scripts` описують призначення шрифту;
-самі по собі вони не підтверджують повну абетку або мовний профіль.
-Автор може перелічити перевірені абетки в описі шрифту.
+Glyph keys describe explicit coverage. Composition can extend layout
+coverage. The `languages` and `scripts` metadata describe intended use.
+Authors can list verified alphabets in the font description. The block
+sets are fixed for `linefont/1`. Previously valid files must remain valid
+within the same format version.
 
-Набори заморожені для `linefont/1`. Розширення наборів не повинно робити
-наявний валідний файл невалідним у тій самій версії формату.
+## Fallback and diacritics
 
-## Підстановка й діакритика
+The engine visits fonts in stack order. In each font it looks for a ready
+glyph, then tries canonical Unicode composition before moving on. The first
+font that supplies a complete block supplies its symbols. A partial block
+cannot be supplied through the free group.
 
-Шрифти переглядаються за списком. Для кожного шрифту спочатку перевіряється
-готовий гліф, потім канонічна композиція Unicode, потім наступний шрифт.
-Оскільки всі блоки валідовані як повні, усі символи певного блоку походять
-із першого шрифту, який його має. Частковий блок у вільній секції заборонений.
+The engine segments text into grapheme clusters and uses NFC for lookup.
+Original characters and UTF-16 ranges are preserved. When a ready glyph is
+missing, NFD identifies the base and combining marks. Components come from
+one font. Visually similar letters in other scripts are distinct.
 
-Текст сегментується на графемні кластери. NFC застосовується лише до пошуку,
-початкові символи й UTF-16 діапазони зберігаються. Якщо готового гліфа немає,
-NFD визначає основу та комбінувальні знаки. Компоненти беруться з одного
-файлу; візуально схожі літери інших писемностей не підміняються.
+Automatic positioning handles combining classes 230 (`top`), 220 and 202
+(`bottom`). The base supplies the corresponding `anchors` entry and the
+mark supplies `attach`. The mark offset equals the base anchor minus
+`attach`. A mark can supply the next anchor. Other classes require an
+explicit `composite` or a ready glyph. Dot removal on i requires a ready
+glyph or an explicit recipe using the appropriate Unicode base.
 
-Початкова реалізація підтримує класи діакритики 230 (`top`), 220 і 202
-(`bottom`). Основа має відповідний `anchors`; знак має `attach`.
-Зсув знака: якір основи мінус `attach`. Знак може задавати наступний якір
-для наступного знака. Для інших класів потрібен явний `composite` або
-готовий гліф. Автоматичне прибирання крапки в i не виконується: потрібна
-готова літера або явний рецепт із відповідною Unicode-основою.
+Missing clusters appear as boxes and are listed in `missing`. Indices are
+computed after normalizing CRLF and standalone CR to LF. NFC lookup leaves
+these indices intact. Ranking greedily picks the font covering the most
+occurrences of uncovered clusters and preserves the previous order for ties.
+Manual order takes precedence.
 
-Еталонна розкладка позначає відсутній кластер рамкою й повертає його в
-`missing`; вихідний текст зберігається. Індекси обчислюються після перетворення
-CRLF та окремих CR на LF. Пошукова NFC-нормалізація не змінює цих індексів. Алгоритм ранжування
-жадібно обирає шрифт, який покриває найбільше появ ще не покритих кластерів;
-при рівності зберігається попередній порядок. Ручний порядок має пріоритет.
+## Reference implementation limits
 
-## Межі першої реалізації
+A stack can contain 64 fonts. Limits include 8 MB per imported file,
+20,000 glyphs per font, 10,000 commands per expanded glyph, 200,000
+commands per font and 200,000 component visits during validation. Text
+layout is limited to 100,000 UTF-16 units and 2,000,000 commands. WASM
+JSON requests are limited to 16 MB. Coordinates must be finite with
+absolute values no greater than 1,000,000.
 
-До 64 шрифтів у списку, 8 МБ на імпортований файл, 20000 гліфів на шрифт,
-10000 команд у розгорнутому гліфі, 200000 команд на шрифт та звернень до
-компонентів під час його валідації, 100000 UTF-16 одиниць у тексті й
-2000000 команд у текстовій розкладці. JSON-запит WASM обмежений 16 МБ.
-Координати скінченні, модуль не більший за 1000000.
+Kerning, complex shaping, language-specific forms, language-profile
+validation and full SVG import are outside the current implementation.
+`italic` describes the stored geometry. The caller sets stroke
+thickness, size and line height.
 
-Кернінг, складний шейпінг, мовні варіанти форм, перевірка мовних профілів
-і повний SVG-імпортер не підтримуються. `italic` позначає геометрію файлу;
-підтримку запиту стилю описано нижче. Товщину, розмір і міжрядковий крок задає викликач.
+## Style and layout
 
+The optional `family` links upright and italic variants. Matching IDs alone
+do not establish a family. For italic text, the library searches for an
+italic variant in the relevant family. If none exists, it shears the
+centerlines 15° from vertical around the baseline. Authored italics keep
+their original angle. Without an upright variant, authored italics keep
+their geometry for upright requests.
 
-## Стиль і розкладка
+Layout accepts height, line height, additional grapheme spacing and left,
+center, right or justified alignment. Justification requires `wrapWidth`
+and expands inner spaces only on soft-wrapped lines. Final lines, explicit
+line breaks and lines without inner spaces keep their spacing. Other modes
+use the longest line as the reference width when `wrapWidth` is absent.
 
-Необов’язковий family явно пов’язує прямий і похилий варіанти. Однаковий ID
-сам по собі не означає сімейство. При запиті italic бібліотека шукає готовий
-варіант у family відповідного шрифту; якщо його немає, нахиляє центральні
-траєкторії на 15° від вертикалі навколо базової лінії. Намальований italic
-не нахиляється повторно. Без прямого варіанта бібліотека не намагається
-автоматично «випрямляти» авторський italic.
+UTF-16 `styleRuns` apply upright or italic style to visible text without
+moving components between fonts or altering character codes. Runs must be
+sorted and nonoverlapping, with at most 10,000 entries. Applications parse
+their own Markdown or other markup into text and ranges before layout.
 
-Розкладка підтримує висоту, міжрядковий крок, додатковий інтервал між
-графемами й вирівнювання left/center/right/justify. За шириною розтягуються
-внутрішні пробіли soft-wrapped рядків; останні, завершені Enter та рядки
-без внутрішніх пробілів не розтягуються. Для justify потрібна wrapWidth.
-В інших режимах без wrapWidth опорною шириною є найдовший рядок.
+A fixed width accounts for left and right overhangs after synthetic shear.
+The overhang allowance occupies at most half the width. Wrapping and
+alignment use the remainder. If a single grapheme exceeds the whole width,
+horizontal scaling fits its line and caret positions while preserving
+all strokes.
 
-UTF-16 styleRuns задають прямий/похилий стиль фрагментів видимого тексту,
-не переносять компоненти між шрифтами та не змінюють коди символів.
-Вони відсортовані, не перетинаються; максимум 10000. Markdown не входить у
-формат шрифту або ядро: програма перетворює своє джерело на текст і діапазони.
+[Standard contributions](CONTRIBUTIONS.md) · [Conformance fixtures](../examples/conformance/)
 
-Фіксована ширина враховує ліві й праві виноси геометрії після синтетичного
-нахилу. Резерв для виносів не перевищує половину блоку; перенос і вирівнювання
-використовують решту. Крайовий випадок графеми, ширшої за весь блок, вписується
-масштабуванням X рядка разом із курсором. Штрихи не обрізаються.
+## Geometry in linefont/0.0.2
 
-See [contributing to this standard](CONTRIBUTIONS.md).
+Set `"format": "linefont/0.0.2"` for extended paths.
 
-[Еталонні приклади](../examples/conformance/) задають очікувану підстановку,
-позиції та штрихи для звіряння незалежних реалізацій.
-
-## Геометрія linefont/0.0.2
-
-Автор указує `"format": "linefont/0.0.2"` у файлі з розширеною геометрією.
-
-| Команда | Параметри після команди | Геометрія |
+| Command | Parameters | Geometry |
 | --- | --- | --- |
-| M, L | x y | Переміщення пера або відрізок |
-| Q | cx cy x y | Квадратична Безьє |
-| T | x y | Продовження Q/T з відбитою контрольною точкою |
-| C | cx1 cy1 cx2 cy2 x y | Кубічна Безьє |
-| S | cx2 cy2 x y | Продовження C/S з відбитою першою контрольною точкою |
-| A | rx ry rotation largeArc sweep x y | Еліптична дуга за кінцевими точками SVG |
+| M, L | x y | Pen move or straight segment |
+| Q | cx cy x y | Quadratic Bézier |
+| T | x y | Q/T continuation with reflected control point |
+| C | cx1 cy1 cx2 cy2 x y | Cubic Bézier |
+| S | cx2 cy2 x y | C/S continuation with reflected first control point |
+| A | rx ry rotation largeArc sweep x y | SVG endpoint elliptical arc |
 
-Після команди іншої родини T і S використовують поточну точку як першу контрольну.
-Послідовність кубічних сегментів задає кусковий сплайн Безьє. Радіуси
-дуги невід’ємні, поворот задано в градусах, обидва прапорці дорівнюють 0 або 1.
-Діють правила SVG щодо напрямку та пропорційного збільшення замалих радіусів.
-Нульовий радіус дає відрізок, збіг кінцевих точок пропускає дугу. Коло має
-рівні радіуси. Для повного оберту потрібні щонайменше дві дуги.
+After a command from another family, T and S use the current point as the
+first control point. A sequence of cubics forms a piecewise Bézier spline.
+Arc radii are nonnegative, rotation is in degrees and both flags are 0 or 1.
+SVG sweep and proportional radius correction rules apply. A zero radius
+produces a line. Coincident endpoints skip the arc. Equal radii produce a
+circle, which needs at least two arcs for a full revolution.
 
-[Приклад шрифту](../examples/Curves.lint) · [Профілі виводу й допуск](../docs/integration.md#geometry-profiles-in-the-development-version)
+[Example font](../examples/Curves.lint) · [Output profiles and tolerances](../docs/integration.md#geometry-profiles-in-the-development-version)
 
-[JSON Schema для обох версій](linefont.schema.json) описує структуру, ключі Unicode,
-метрики та взаємовиключні способи побудови гліфа. Ядро додатково перевіряє
-граматику траєкторій відповідно до версії, скінченність координат, посилання,
-цикли, повноту блоків і ліміти після розгортання. Обмеження довжини рядків у
-схемі рахують символи, ліміти ресурсів ядра для вхідних даних — байти.
+The [JSON Schema for both versions](linefont.schema.json) describes structure,
+Unicode keys, metrics and mutually exclusive glyph representations. The core
+also checks version-specific path grammar, finite coordinates, references,
+cycles, block completeness and expanded limits. Schema string lengths count
+characters. Core input resource limits count bytes.
