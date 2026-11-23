@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/octycs/norm-stroke",
+  "version": "e4f7be3ee482d3026f19b7afae88c1e0c193316a",
+  "rightsHolder": "octycs (NormStroke), based on a public-domain SVG by Wikimedia Commons user K7",
+  "license": "CC0-1.0",
+  "notices": ["LICENSES/CC0-1.0.txt"],
+  "changes": "Converted the original SVG font to absolute M/L/C paths, flipped the Y axis, approximated arcs as cubics, and omitted the incomplete punctuation, quotes and mathematics-technical blocks."
+}

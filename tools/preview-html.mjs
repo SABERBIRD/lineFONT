@@ -34,6 +34,7 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
     viewer,
     inscription,
     glyphTemplate,
+    fontImport,
     catalog,
     notices,
     license,
@@ -48,6 +49,7 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
     read("./preview-browser.mjs"),
     read("./preview-inscription.mjs"),
     read("./preview-glyph-template.mjs"),
+    read("./preview-font-import.mjs"),
     read("./preview-language-samples.json"),
     read("./preview-language-samples.NOTICE.txt"),
     read("../LICENSES/Apache-2.0.txt"),
@@ -83,6 +85,28 @@ ${stylesheet}
   <h1 id="font-name">${escapeXml(font.name)}</h1>
   <p id="font-metrics">${escapeXml(font.version)} · cap height ${font.metrics.capHeight} · baseline ${font.metrics.baseline} · default advance ${font.metrics.defaultAdvance}</p>
 </header>
+<details>
+  <summary>Import a whole font</summary>
+  <form id="whole-font-import">
+    <label for="whole-font-file">SVG or LFF font</label>
+    <input type="file" id="whole-font-file" accept=".svg,.lff,image/svg+xml" required>
+    <div class="inscription-metrics">
+      <label>Font name<input name="name"></label>
+      <label>Author<input name="author"></label>
+      <label>Font version<input name="version"></label>
+      <label>License<input name="license"></label>
+      <label>Source URL<input type="url" name="url"></label>
+      <label>Source revision<input name="sourceVersion"></label>
+      <label>Capital height override<input name="capHeight" type="number" min="0.001" step="any"></label>
+    </div>
+    <label>Text to check<input name="sample" value="ABC abc 0123 Αβγ Ґ"></label>
+    <label><input name="omitIncomplete" type="checkbox">Omit incomplete blocks</label>
+    <button type="submit">Convert font</button>
+    <button type="button" id="whole-font-save" disabled>Download imported font</button>
+  </form>
+  <div id="whole-font-image" class="scroll-area"></div>
+  <pre id="whole-font-status" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre>
+</details>
 <section id="inscription">
 <details><summary>Inscription</summary>
   <form id="inscription-form">
@@ -203,7 +227,7 @@ ${stylesheet}
 (() => {
 function loadLayout() {
 ${runtime}
-return { layout, parseFont, inkBounds, coverage, importSvgPaths, flattenFont };
+return { layout, parseFont, inkBounds, coverage, importSvgPaths, flattenFont, importStrokeFont };
 }
 ${browserSource(i18n)}
 ${browserSource(xmlSource)}
@@ -213,6 +237,7 @@ ${browserSource(specimenSource)}
 ${browserSource(detailSource)}
 ${browserSource(inscription)}
 ${browserSource(glyphTemplate)}
+${browserSource(fontImport)}
 ${viewer}
 })();
 </script>

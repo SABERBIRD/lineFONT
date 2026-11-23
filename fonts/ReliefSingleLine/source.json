@@ -1,0 +1,8 @@
+{
+  "url": "https://github.com/isdat-type/Relief-SingleLine",
+  "version": "01dfc5779ec1e9e4b288d96c6c96c23bfccbaf9d",
+  "rightsHolder": "The Relief SingleLine Project Authors",
+  "license": "OFL-1.1",
+  "notices": ["LICENSES/ReliefSingleLine-OFL-1.1.txt"],
+  "changes": "Converted the open-path SVG regular font to absolute M/L/C, flipped the Y axis, omitted unmapped and multi-character glyphs and kerning, and omitted the incomplete mathematics-technical block."
+}

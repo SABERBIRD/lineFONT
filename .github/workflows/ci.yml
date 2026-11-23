@@ -36,6 +36,15 @@ jobs:
         run: node --test tests/browser/*.test.mjs
       - run: npm run font:validate -- fonts/*/*.lint examples/*.lint examples/conformance/*.lint
       - run: npm pack
+      - name: Check packaged font notices and create review specimens
+        run: |
+          unpacked="$(mktemp -d)"
+          tar -xzf ./*.tgz -C "$unpacked"
+          node tools/check-font-contributions.mjs font-review "$unpacked/package"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linefont-font-review
+          path: font-review/
       - name: Check installation of the packed package
         run: |
           tarball="$(realpath ./*.tgz)"
@@ -101,6 +110,6 @@ jobs:
             echo "Release $GITHUB_REF_NAME is already published."
             exit 0
           fi
-          zip -j linefont-fonts.zip fonts/*/*.lint LICENSES/CC-BY-4.0.txt
+          zip linefont-fonts.zip fonts/*/*.lint fonts/*/README.md fonts/*/source.json LICENSES/*.txt
           tar -czf linefont-linux-x86_64.tar.gz -C core/target/release liblinefont.so -C "$GITHUB_WORKSPACE/core/include" linefont.h -C "$GITHUB_WORKSPACE" LICENSE THIRD_PARTY.txt
           gh release create "$GITHUB_REF_NAME" ./*.tgz linefont-fonts.zip linefont-linux-x86_64.tar.gz core/target/wasm32-unknown-unknown/release/linefont.wasm --verify-tag --title "lineFONT $GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md

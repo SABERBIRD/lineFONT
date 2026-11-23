@@ -8,8 +8,8 @@ use svgtypes::{
 
 #[derive(Deserialize)]
 pub(crate) struct SvgPath {
-    d: String,
-    transforms: Vec<String>,
+    pub(crate) d: String,
+    pub(crate) transforms: Vec<String>,
 }
 
 pub(crate) fn import_paths(paths: Vec<SvgPath>) -> Result<(Vec<Command>, bool)> {

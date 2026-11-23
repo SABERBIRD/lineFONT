@@ -166,3 +166,14 @@ export function importSvgPaths(paths: { d: string; transforms: string[] }[]) {
 export function flattenFont(font: LintFont) {
   return request<LintFont>({ op: 'flattenFont', font });
 }
+
+/** Read an SVG 1.1 or LibreCAD LFF font and report incomplete required blocks before validation. */
+export function importStrokeFont(source: string, options: {
+  name?: string; id?: string; author?: string; version?: string;
+  license?: string; capHeight?: number;
+  source?: { url: string; version: string };
+} = {}, format: 'svg' | 'lff' = 'svg') {
+  return request<{ font: LintFont; warnings: string[];
+    blocks: { name: string; present: string[]; missing: string[] }[];
+  }>({ op: format === 'lff' ? 'importLffFont' : 'importSvgFont', source, options });
+}

@@ -140,6 +140,20 @@ const ukrainian = {
   "SVG user coordinates are treated as font units. Styling is discarded.": "Координати SVG використовуються як одиниці шрифту. Стилі відкинуто.",
   "Arcs were approximated by cubic curves.": "Дуги апроксимовано кубічними кривими.",
   "Filled outlines may trace both edges. Inspect the preview for double passes.": "Контури із заливкою можуть вести перо по обох краях. Перевірте подвійні проходи на зразку.",
+  "Import a whole font": "Імпортувати цілий шрифт",
+  "SVG or LFF font": "Шрифт SVG або LFF",
+  "Font name": "Назва шрифту",
+  "Author": "Автор",
+  "Font version": "Версія шрифту",
+  "License": "Ліцензія",
+  "Source URL": "Адреса джерела",
+  "Source revision": "Версія джерела",
+  "Capital height override": "Задати висоту великих літер",
+  "Text to check": "Текст для перевірки",
+  "Omit incomplete blocks": "Пропустити неповні блоки",
+  "Convert font": "Конвертувати шрифт",
+  "Download imported font": "Завантажити імпортований шрифт",
+  "Imported glyphs: ": "Імпортовано гліфів: ",
 };
 export function translate(locale, label) {
   return locale === "uk" ? (ukrainian[label] ?? label) : label;

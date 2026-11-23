@@ -27,19 +27,20 @@ order within each section. Releases are created on request. Changes to the
 
 - [ ] **8. Mobile accessibility, partly complete.** Larger touch targets, visible focus, keyboard card access, local scrolling and a script-blocking notice are implemented. Tested in Chromium at 320 px with touch input. Verify file picking, pinch zoom, copying and SVG download on physical Android and iOS devices.
 - [ ] **10. Language sample quality, partly complete.** There are technical phrases and separate alphabet checks for 19 languages. Native-speaker review is pending. Each sample's status is stored in the catalog.
-- [ ] **24. CI for font contributions.** Validate fonts, block completeness and licenses. Generate review artifacts.
 - [ ] **23. Compare versions.** Show changes in glyphs, advances and anchors with a visual overlay.
 - [ ] **28. Physical tests.** Check small sizes, open strokes, tool lifts and diacritics on a plotter and engraver. Publish «Ґвинт М3 · ⌀6 ±0,1 мм · 45° · αβ» at 2, 3 and 4 mm, with source text, fonts, SVG, PDF, pen width and photos. Check that commas, periods and diacritics are legible in the photos.
 
 ## Later features and dependencies
 
+- [ ] **42. Additional font formats.** Consider SHP/SHX when AutoCAD users request it.
 - [ ] **34. Recommended line height.** Define an optional metric in font units and a rule for existing files. Scale it with capital height and allow manual adjustment. Test Ukrainian overhangs and accented Greek letters.
 - [ ] **32. Inscription DXF.** After SVG and PDF, export strokes as standard CAD geometry. Open the result in an external CAD application and check physical dimensions and open paths.
-- [ ] **33. Whole-font import.** Start with Hershey Text-compatible SVG fonts, then LibreCAD LFF. Preserve Unicode mappings and metrics and report conversion losses. List missing characters in incomplete mandatory blocks and let the author complete or omit the whole block. Consider SHP/SHX when AutoCAD users request it.
 - [ ] **30. MCP adapter.** Once the tool APIs stabilize, provide validation, coverage, comparison and specimens with resource limits.
 
 ## Completed
 
+- [x] **24. CI for font contributions.** Validate .lint and block completeness, require third-party provenance and matching license notices, verify packaged notices, and publish coverage and visual specimens.
+- [x] **33. Whole-font import.** Convert Hershey Text-compatible SVG and LibreCAD LFF from the CLI and offline viewer. Preview strokes and missing characters, report losses and require explicit permission to omit incomplete blocks. NormStroke and Relief are reproducible bundled conversions.
 - [x] **39. Guide for binding authors.** Documented Rust, WASM and C ABI entry points, buffer ownership, diagnostics and document switching. The installed Python adapter runs the shared layout fixtures.
 - [x] **27. C, C++ and Python packages.** CI builds and tests Ubuntu 24.04 Linux x86-64 artifacts. The archive provides CMake targets and a typed C++ adapter. The wheel includes the native core.
 - [x] **40. Batch CLI.** Reads UTF-8 text from a file or stdin and emits millimetre SVG or layout JSON. Tests cover multiline layout, physical SVG dimensions and faulty fonts.

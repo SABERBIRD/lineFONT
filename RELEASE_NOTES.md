@@ -2,6 +2,8 @@
 
 ## 0.0.3 (unreleased)
 
+- Imports SVG 1.1 and LibreCAD LFF fonts in the preview and CLI. Includes NormStroke under CC0 and Relief SingleLine under OFL, with provenance and notices.
+
 - Imports edited SVG glyph paths into the offline viewer and exports validated .lint fonts.
 - Exports flattened fonts while preserving resolved glyph advances and anchors.
 - Adds a typed Rust layout request constructor and external integration examples.

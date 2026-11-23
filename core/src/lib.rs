@@ -1,4 +1,6 @@
 mod diagnostic;
+mod font_import;
+mod lff_import;
 mod svg_import;
 pub use diagnostic::Diagnostic;
 mod geometry;
@@ -1240,6 +1242,14 @@ fn request(value: Value) -> Result<Value> {
             )
             .map_err(|e| e.to_string().into())
         }),
+        Some("importLffFont") => lff_import::lff_font(
+            value["source"].as_str().ok_or("Expected LFF source")?,
+            &value["options"],
+        ),
+        Some("importSvgFont") => font_import::svg_font(
+            value["source"].as_str().ok_or("Expected SVG source")?,
+            &value["options"],
+        ),
         Some("importSvgPaths") => {
             let paths =
                 serde_json::from_value(value["paths"].clone()).map_err(|e| e.to_string())?;

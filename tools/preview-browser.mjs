@@ -40,6 +40,7 @@ let fonts = [font];
 const refreshInscription = setupInscription(() => fonts, t, errorDetail);
 let compareFont = null;
 let compareFonts = [];
+setupFontImport(t);
 setupGlyphTemplate((choice) => choice === "comparison" ? compareFont : font, t);
 const resetGlyphImport = setupGlyphImport((choice) => choice === "comparison" ? compareFont : font, t);
 const comparison = document.getElementById("comparison");

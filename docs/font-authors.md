@@ -73,3 +73,33 @@ original if you want to edit its component references later.
 
 For exact code points, inspect the .lint glyph keys or use the
 [coverage CLI](integration.md#coverage-and-validation-002-checkout).
+
+## Import a whole font
+
+Use **Import a whole font** in the offline preview, or run `linefont-import`.
+Both accept Hershey Text-compatible SVG 1.1 fonts and UTF-8 LibreCAD LFF.
+The SVG importer reads one font with path-based glyphs, flips its Y axis and
+preserves horizontal advances. Set a cap height override if the SVG omits
+`cap-height`. SVG kerning, alternate glyphs and multi-character mappings
+are reported as conversion losses. LFF uses cap height 9 by default,
+expands glyph references and derives advances from rightmost ink plus
+letter spacing. Both formats approximate arcs as cubic Béziers.
+
+An incomplete required block prevents export by default. Add the missing
+glyphs in the source and reimport, or choose **Omit incomplete blocks**.
+The preview reports which blocks were removed and which characters the
+result cannot render in your sample. The converter also accepts author,
+license and source metadata.
+
+```sh
+node tools/import-linefont.mjs --omit-incomplete --author octycs --license CC0-1.0 \
+  --source-url https://github.com/octycs/norm-stroke \
+  --source-version e4f7be3ee482d3026f19b7afae88c1e0c193316a \
+  fonts/NormStroke/source/NormStroke.svg > /tmp/NormStroke.lint
+```
+
+For a bundled font, use the upstream licensing terms and record provenance
+in `fonts/<family>/source.json`. See the existing imports for examples.
+[NormStroke, CC0](../fonts/NormStroke/README.md) ·
+[Relief SingleLine, OFL](../fonts/ReliefSingleLine/README.md) ·
+[Contribution requirements](../CONTRIBUTING.md)

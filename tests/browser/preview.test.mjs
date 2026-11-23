@@ -175,6 +175,33 @@ test(
     for (const download of edited.downloads)
       assert.equal(parseFont(JSON.stringify(download)).glyphs["0490"].d, "M1 10 L1 1 L6 1 L6 0");
 
+    const wholeFont = await evaluate(`(async () => {
+      const file = document.querySelector("#whole-font-file");
+      const form = document.querySelector("#whole-font-import");
+      const status = document.querySelector("#whole-font-status");
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg"><defs><font id="Demo" horiz-adv-x="8"><font-face cap-height="10"/><glyph unicode="A" d="M0 0 L4 10 L8 0"/><glyph unicode="1" d="M4 0 L4 10"/></font></defs></svg>';
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([svg], "demo.svg"));
+      file.files = transfer.files;
+      async function convert() {
+        form.requestSubmit();
+        for (let i = 0; i < 100 && !status.textContent; i++)
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        return status.textContent;
+      }
+      const first = await convert();
+      form.elements.namedItem("omitIncomplete").checked = true;
+      const second = await convert();
+      return {
+        first, second,
+        drawn: !!document.querySelector("#whole-font-image svg path"),
+        ready: !document.querySelector("#whole-font-save").disabled,
+      };
+    })()`);
+    assert.match(wholeFont.first, /digits.*0 2 3/);
+    assert.match(wholeFont.second, /Omitted digits/);
+    assert(wholeFont.drawn && wholeFont.ready);
+
     const inscription = await evaluate(`(async () => {
       const form = document.querySelector("#inscription-form");
       form.closest("details").open = true;

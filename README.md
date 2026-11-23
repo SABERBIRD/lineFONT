@@ -44,4 +44,4 @@ Each glyph's `commands` contains its placed strokes. The same layout can drive a
 
 ## Fonts and licensing
 
-The [Ukrainian and English font](fonts/bagLING-UA-EN/README.md) and [Greek letters font](fonts/bagLING-Greek-Letters/README.md) were created with AI assistance. Code uses MIT. Specification, documentation, example font and bundled fonts use CC BY 4.0, credited to SABERBIRD. Preserve the credit and license link and indicate changes when redistributing them. [MIT](LICENSE) · [CC BY 4.0](LICENSES/CC-BY-4.0.txt) · [Third-party notices](THIRD_PARTY.txt)
+The [Ukrainian and English font](fonts/bagLING-UA-EN/README.md) and [Greek letters font](fonts/bagLING-Greek-Letters/README.md) were created with AI assistance. Code uses MIT. The specification, documentation, example font and bagLING fonts use CC BY 4.0, credited to SABERBIRD. Preserve the credit and license link and indicate changes when redistributing them. Third-party fonts follow the terms documented for each family. [MIT](LICENSE) · [CC BY 4.0](LICENSES/CC-BY-4.0.txt) · [Third-party notices](THIRD_PARTY.txt)
