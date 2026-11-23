@@ -80,6 +80,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")"
+          if gh release view "$GITHUB_REF_NAME" --json isDraft --jq '.isDraft' | grep -Fxq false; then
+            echo "Release $GITHUB_REF_NAME is already published."
+            exit 0
+          fi
           zip -j linefont-fonts.zip fonts/*/*.lint LICENSES/CC-BY-4.0.txt
           tar -czf linefont-linux-x86_64.tar.gz -C core/target/release liblinefont.so -C "$GITHUB_WORKSPACE/core/include" linefont.h -C "$GITHUB_WORKSPACE" LICENSE THIRD_PARTY.txt
           gh release create "$GITHUB_REF_NAME" ./*.tgz linefont-fonts.zip linefont-linux-x86_64.tar.gz core/target/wasm32-unknown-unknown/release/linefont.wasm --verify-tag --title "lineFONT $GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
