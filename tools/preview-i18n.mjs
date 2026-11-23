@@ -131,6 +131,15 @@ const ukrainian = {
   "Download glyph template": "Завантажити шаблон гліфа",
   "Load a comparison font first.": "Спочатку відкрийте другий шрифт.",
   "Enter one character or a Unicode code.": "Введіть один символ або код Unicode.",
+  "Import edited glyph SVG": "Імпортувати SVG гліфа",
+  "Imported pen path": "Імпортована траєкторія пера",
+  "Glyph in sample text": "Гліф у зразку тексту",
+  "Download validated font": "Завантажити перевірений шрифт",
+  "Download flattened font": "Завантажити шрифт без посилань",
+  "Imported glyph validated.": "Імпортований гліф перевірено.",
+  "SVG user coordinates are treated as font units. Styling is discarded.": "Координати SVG використовуються як одиниці шрифту. Стилі відкинуто.",
+  "Arcs were approximated by cubic curves.": "Дуги апроксимовано кубічними кривими.",
+  "Filled outlines may trace both edges. Inspect the preview for double passes.": "Контури із заливкою можуть вести перо по обох краях. Перевірте подвійні проходи на зразку.",
 };
 export function translate(locale, label) {
   return locale === "uk" ? (ukrainian[label] ?? label) : label;

@@ -1,4 +1,5 @@
 mod diagnostic;
+mod svg_import;
 pub use diagnostic::Diagnostic;
 mod geometry;
 pub use geometry::ink_bounds;
@@ -519,6 +520,39 @@ pub fn convert_font(font: Font, output: &str, tolerance: f64) -> Result<Font> {
     }
     converted.format = "linefont/1".into();
     Ok(load_at(converted, tolerance)?.font)
+}
+/// Expand explicit references into independent paths in font coordinates.
+pub fn flatten_font(font: Font) -> Result<Font> {
+    let loaded = Engine::new(vec![font])?.fonts.pop().unwrap();
+    let mut font = loaded.font;
+    for (key, glyph) in &mut font.glyphs {
+        let shape = &loaded.shapes[&scalar(key)?];
+        glyph.d = Some(
+            shape
+                .commands
+                .iter()
+                .map(|cmd| {
+                    format!(
+                        "{}{}",
+                        cmd.code,
+                        cmd.values
+                            .iter()
+                            .map(f64::to_string)
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(" "),
+        );
+        glyph.alias = None;
+        glyph.composite = None;
+        glyph.advance = Some(shape.advance);
+        glyph.anchors.clone_from(&shape.anchors);
+        glyph.attach.clone_from(&shape.attach);
+    }
+    font.format = "linefont/1".into();
+    Ok(Engine::new(vec![font])?.fonts.pop().unwrap().font)
 }
 fn composed(font: &Loaded, text: &str) -> Option<Shape> {
     let mut chars = text.chars();
@@ -1090,6 +1124,24 @@ pub struct LayoutRequest {
     #[serde(default)]
     pub style_runs: Vec<StyleRun>,
 }
+impl LayoutRequest {
+    /// Start a left-aligned upright layout at the origin with 1.8× line height.
+    pub fn new(text: impl Into<String>, height: f64) -> Self {
+        Self {
+            text: text.into(),
+            height,
+            line_height: height * 1.8,
+            top: 0.,
+            tolerance: None,
+            output: None,
+            wrap_width: None,
+            letter_spacing: 0.,
+            style: default_style(),
+            alignment: default_alignment(),
+            style_runs: Vec::new(),
+        }
+    }
+}
 fn default_alignment() -> String {
     "left".into()
 }
@@ -1188,6 +1240,16 @@ fn request(value: Value) -> Result<Value> {
             )
             .map_err(|e| e.to_string().into())
         }),
+        Some("importSvgPaths") => {
+            let paths =
+                serde_json::from_value(value["paths"].clone()).map_err(|e| e.to_string())?;
+            let (commands, approximated) = svg_import::import_paths(paths)?;
+            Ok(json!({ "commands": commands, "approximated": approximated }))
+        }
+        Some("flattenFont") => {
+            let font = serde_json::from_value(value["font"].clone()).map_err(|e| e.to_string())?;
+            Ok(json!(flatten_font(font)?))
+        }
         Some("convert") => {
             let font = serde_json::from_value(value["font"].clone())
                 .map_err(|e| Diagnostic::at("font_structure", "/font", e.to_string()))?;

@@ -1,5 +1,11 @@
 # lineFONT release notes
 
+## 0.0.3 (unreleased)
+
+- Imports edited SVG glyph paths into the offline viewer and exports validated .lint fonts.
+- Exports flattened fonts while preserving resolved glyph advances and anchors.
+- Adds a typed Rust layout request constructor and external integration examples.
+
 ## 0.0.2
 
 - Adds the `linefont/0.0.2` file format for absolute quadratic Béziers (Q/T), smooth cubic Béziers (S) and circular or elliptical arcs (A), alongside M/L/C. Existing `linefont/1` files remain readable. [Curve example](examples/Curves.lint)

@@ -156,3 +156,13 @@ export function convertFont(
 ): LintFont {
   return request({ op: 'convert', font, ...options });
 }
+
+/** Convert SVG path data and ancestor transforms to centerline commands. */
+export function importSvgPaths(paths: { d: string; transforms: string[] }[]) {
+  return request<{ commands: Command[]; approximated: boolean }>({ op: 'importSvgPaths', paths });
+}
+
+/** Expand explicit glyph references while preserving effective metrics. */
+export function flattenFont(font: LintFont) {
+  return request<LintFont>({ op: 'flattenFont', font });
+}

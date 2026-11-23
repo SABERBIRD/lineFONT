@@ -4,7 +4,7 @@
 
 Use Node 22.12+ or a browser bundler with ES modules and WebAssembly. The package includes TypeScript declarations and a synchronous WASM engine. Import each bundled font by its public subpath. For an external .lint file, pass its UTF-8 text to `parseFont`. Keep the same font stack while editing text.
 
-For **released 0.0.2**, follow the [README installation and first layout](../README.md#first-layout-in-javascript). To try the **0.0.2 checkout**, run these commands from its root. The checkout includes generated fonts and WASM.
+For **released 0.0.2**, follow the [README installation and first layout](../README.md#first-layout-in-javascript). To try the **0.0.3 development checkout**, run these commands from its root. The checkout includes generated fonts and WASM.
 
 ```sh
 npm ci
@@ -19,9 +19,9 @@ node layout.mjs
 
 To regenerate the font wrappers and WASM after changing their sources, install the pinned Rust toolchain with the wasm32-unknown-unknown target and run `node tools/convert-linefont.mjs`, `node tools/build-linefont.mjs` and `npm run build` from the repository root.
 
-Both versions produce 14 glyphs with no missing clusters in the README example.
+The example produces 14 glyphs with no missing clusters in the README example.
 
-## Rust (0.0.2 checkout)
+## Rust (0.0.3 development checkout)
 
 From the repository root, create a separate Cargo application using the local crate. Use the Rust version in [rust-toolchain.toml](../core/rust-toolchain.toml).
 
@@ -35,9 +35,11 @@ cp "$repo/examples/integration/layout.rs" src/main.rs
 cargo run -- "$repo/examples/SingleGlyph.lint"
 ```
 
+For a Git dependency, replace the local Cargo command with `cargo add linefont --git https://github.com/SABERBIRD/lineFONT --branch 003`. Pin a tested commit for reproducible builds. The typed `LayoutRequest::new(text, height)` defaults to upright left-aligned text at the origin, with line height 1.8 times the capital height. Override public fields for wrapping or other layout options.
+
 The [Rust example](../examples/integration/layout.rs) loads the font, creates an independent engine and prints `glyphs=1 missing=0`.
 
-## C and C++ (Linux, 0.0.2 checkout)
+## C and C++ (Linux)
 
 From the repository root, build the shared library and compile the [C example](../examples/integration/layout.c). This example uses json-c development headers and pkg-config. Its JSON output includes the placed strokes under `ok.glyphs[0].commands`.
 

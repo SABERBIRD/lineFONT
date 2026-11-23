@@ -162,6 +162,13 @@ ${stylesheet}
     <button type="submit">Download glyph template</button>
     <p id="glyph-template-status" role="status"></p>
   </form>
+  <label for="glyph-import-file">Import edited glyph SVG</label>
+  <input id="glyph-import-file" type="file" accept=".svg,image/svg+xml">
+  <p id="glyph-import-status" role="status"></p>
+  <div id="glyph-import-preview" class="scroll-area" aria-label="Imported pen path"></div>
+  <div id="glyph-import-proof" class="scroll-area" aria-label="Glyph in sample text"></div>
+  <button type="button" id="glyph-import-save" disabled>Download validated font</button>
+  <button type="button" id="glyph-export-flat">Download flattened font</button>
 </details>
   <div class="pager">
   <button id="glyph-prev" type="button">Previous page</button>
@@ -196,7 +203,7 @@ ${stylesheet}
 (() => {
 function loadLayout() {
 ${runtime}
-return { layout, parseFont, inkBounds, coverage };
+return { layout, parseFont, inkBounds, coverage, importSvgPaths, flattenFont };
 }
 ${browserSource(i18n)}
 ${browserSource(xmlSource)}

@@ -1,6 +1,6 @@
 {
   "name": "@saberbird/linefont",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Single-line vector fonts and text layout for lineFONT",
   "license": "MIT AND CC-BY-4.0 AND Apache-2.0",
   "type": "module",

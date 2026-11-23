@@ -14,6 +14,7 @@ lineFONT lays out single-line vector fonts for technical drawings, plotters and 
 | --- | --- | --- |
 | [0.0.1 release](https://github.com/SABERBIRD/lineFONT/releases/tag/v0.0.1) | `linefont/1` | Layout with M/L/C strokes, validator, two bundled fonts |
 | [0.0.2 release](https://github.com/SABERBIRD/lineFONT/releases/tag/v0.0.2) | `linefont/1`, `linefont/0.0.2` | Also supports Q/T/S/A curves, polyline output, coverage reports and the preview CLI |
+| 0.0.3 development checkout | `linefont/1`, `linefont/0.0.2` | Adds SVG glyph import, flattened font export and a typed Rust layout constructor |
 
 A font's own `version` describes the artwork. Its `format` selects the file syntax. [Release notes](RELEASE_NOTES.md) · [Format specification](spec/FORMAT.md) · [Roadmap](ROADMAP.md)
 

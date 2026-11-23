@@ -41,6 +41,7 @@ const refreshInscription = setupInscription(() => fonts, t, errorDetail);
 let compareFont = null;
 let compareFonts = [];
 setupGlyphTemplate((choice) => choice === "comparison" ? compareFont : font, t);
+const resetGlyphImport = setupGlyphImport((choice) => choice === "comparison" ? compareFont : font, t);
 const comparison = document.getElementById("comparison");
 const comparisonPreview = document.getElementById("comparison-preview");
 const comparisonCoverage = document.getElementById("comparison-coverage");
@@ -387,6 +388,7 @@ bindFontInput(
   (candidate, file) => {
     const sheet = specimen(candidate, "", 1, "", localeControl.value);
     font = candidate;
+    resetGlyphImport();
     fonts = [font];
     refreshInscription();
     glyphSearch.value = "";
@@ -506,6 +508,7 @@ const cancelCompareLoad = bindFontInput(
   "Cannot open comparison font · ",
   (candidate) => {
     compareFont = candidate;
+    resetGlyphImport();
     compareFonts = [candidate];
     document.getElementById("comparison-name").textContent = candidate.name;
     clearComparison.disabled = false;
@@ -515,6 +518,7 @@ const cancelCompareLoad = bindFontInput(
 clearComparison.addEventListener("click", () => {
   cancelCompareLoad();
   compareFont = null;
+  resetGlyphImport();
   compareFonts = [];
   clearComparison.disabled = true;
   compareStatus.textContent = "";

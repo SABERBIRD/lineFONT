@@ -133,6 +133,48 @@ test(
     assert.match(template.baseline, new RegExp(" " + font.metrics.baseline + " H"));
     assert.equal(template.paths, 0);
 
+    const edited = await evaluate(`(async () => {
+      const input = document.querySelector("#glyph-import-file");
+      const status = document.querySelector("#glyph-import-status");
+      async function open(svg) {
+        const transfer = new DataTransfer();
+        transfer.items.add(new File([svg], "glyph.svg"));
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change"));
+        for (let i = 0; i < 100 && !status.textContent; i++)
+          await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      await open('<svg xmlns="http://www.w3.org/2000/svg"><use href="#missing"/></svg>');
+      const rejectsUse = status.textContent.includes("Unsupported SVG artwork");
+      document.querySelector("#glyph-template-symbol").value = "Ґ";
+      await open('<svg xmlns="http://www.w3.org/2000/svg" width="25mm"><g transform="translate(1 0)"><path d="m0 10 v-9 h5 v-1"/></g></svg>');
+      const save = document.querySelector("#glyph-import-save");
+      const captured = [];
+      const originalUrl = URL.createObjectURL;
+      const originalClick = HTMLAnchorElement.prototype.click;
+      URL.createObjectURL = (blob) => { captured.push(blob); return "blob:fixture"; };
+      HTMLAnchorElement.prototype.click = () => {};
+      try {
+        save.click();
+        document.querySelector("#glyph-export-flat").click();
+      } finally {
+        URL.createObjectURL = originalUrl;
+        HTMLAnchorElement.prototype.click = originalClick;
+      }
+      return {
+        rejectsUse,
+        warning: status.textContent,
+        visible: !!document.querySelector("#glyph-import-proof svg path"),
+        downloads: await Promise.all(captured.map(async (blob) => JSON.parse(await blob.text()))),
+      };
+    })()`);
+    assert(edited.rejectsUse);
+    assert(edited.visible);
+    assert.match(edited.warning, /both edges/);
+    assert.equal(edited.downloads.length, 2);
+    for (const download of edited.downloads)
+      assert.equal(parseFont(JSON.stringify(download)).glyphs["0490"].d, "M1 10 L1 1 L6 1 L6 0");
+
     const inscription = await evaluate(`(async () => {
       const form = document.querySelector("#inscription-form");
       form.closest("details").open = true;

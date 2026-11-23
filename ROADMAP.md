@@ -1,21 +1,15 @@
 # lineFONT roadmap
 
-The next milestone is contributing a glyph from an SVG template (21) and
-getting a validated .lint file back (22 → 25). Inscription mode (31) is
-available. See item 28 for physical tests.
+The SVG glyph contribution workflow (21 → 22 → 25) and external quickstarts
+(26) are available in the 0.0.3 checkout. See item 28 for physical tests.
 
 Item numbers are stable references. Open items are listed in recommended
 order within each section. Releases are created on request. Changes to the
 .lint schema require a format-version decision.
 
-## Near-term features
-
-- [ ] **22. SVG import.** Handle transforms, units, M/L/C conversion and report conversion losses. Show the pen path after importing a glyph. If a stroke was outlined as two edges, explain the risk of a double pass and let the author inspect it. Flat font export expands aliases and composites into paths while preserving advances.
-- [ ] **25. Font author guide.** Document single-glyph editing and verification. Provide a font catalog with licenses and coverage, and an end-to-end SVG → .lint → composition → PR example. To contribute Ґ, import the edited template, check «Ґ Г ґ» and «ґвинт», then download the validated .lint. The [basic guide](docs/font-authors.md) already covers manual .lint editing.
 
 ## Application integration
 
-- [ ] **26. External application quickstarts.** For each language, load a .lint, supply text and height, then inspect strokes and missing characters. Add a typed Rust request constructor with defaults and prepare the crate for Cargo installation. Test examples from clean projects (38).
 - [ ] **39. Guide for binding authors.** Show how to choose between Rust, WASM and C ABI using one adapter. Cover buffer ownership, errors and switching between two documents. Compare strokes, UTF-16 positions and missing clusters against item 17's fixtures.
 - [ ] **27. C and Python bindings.** A Linux C example exists. Decide supported operating systems and architectures. Provide C/C++ binaries, headers and a CMake target, plus typed access to strokes and errors. Provide Python wheels containing the core. Run a first layout on each supported platform without a local core build.
 - [ ] **40. Batch CLI.** Read text from a file or stdin, take a font and height, and return inscription SVG or stroke JSON. Test SVG units, multiline input and a nonzero exit status for an invalid font.
@@ -49,6 +43,9 @@ order within each section. Releases are created on request. Changes to the
 
 ## Completed
 
+- [x] **22. SVG import.** Import path geometry and nested transforms in font units, convert to M/L/C and report arc approximation and outline risks. Preview the pen path and export a validated .lint. Flat export resolves aliases and composites while retaining effective advances.
+- [x] **25. Font author guide.** Includes a font catalog, licenses and an end-to-end SVG template, Ґ edit, composition proof and PR workflow.
+- [x] **26. External application quickstarts.** Added a typed Rust request with defaults and a packageable Cargo crate, plus verified clean-project examples for JS, Rust and C.
 - [x] **21. Glyph SVG template.** Download a template for a selected font and character with metrics, guides and metadata. The author guide covers the five complete blocks, free characters, licensing and a minimal .lint.
 - [x] **31. Offline inscription mode.** Multiline text, UTF-8 .txt import, millimetre controls, wrapping, SVG and single-page PDF. Chromium checks cover the last line, page dimensions and open strokes. Physical printing at 100% and pen passes have not been tested.
 - [x] **37. Getting started by task.** Three README entry points, a version table, separate integration, authoring and preview guides, and JS, Rust and C examples.
