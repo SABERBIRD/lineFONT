@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+project(linefont_example LANGUAGES CXX)
+find_package(linefont CONFIG REQUIRED COMPONENTS cpp)
+add_executable(layout layout.cpp)
+target_link_libraries(layout PRIVATE linefont::cpp)

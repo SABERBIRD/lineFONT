@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -55,6 +55,8 @@ jobs:
           grep -q '<option value="en_Latn">' specimen.html
           grep -q '<option value="el_Grek">' specimen.html
           node --input-type=module -e "import { layout } from '@saberbird/linefont'; import font from '@saberbird/linefont/fonts/bagling-ua-en'; if (!layout([font], { text: 'ҐA', height: 4, lineHeight: 7.2, top: 1.2 }).glyphs.length) process.exit(1)"
+          printf 'Ґ\nҐ' | npx --no-install linefont-layout --font node_modules/@saberbird/linefont/examples/SingleGlyph.lint --height 4 --format json |
+            python3 -c 'import json,sys; assert [g["line"] for g in json.load(sys.stdin)["glyphs"]] == [0, 1]'
       - name: Check Rust and native integrations
         run: |
           sudo apt-get update
@@ -74,6 +76,21 @@ jobs:
           cc -std=c11 "$repo/examples/integration/layout.c" -Inative -Lnative \
             -Wl,-rpath,"$consumer/native" -llinefont $(pkg-config --cflags --libs json-c) -o layout
           ./layout "$repo/examples/SingleGlyph.lint" | python3 -c 'import json,sys; r=json.load(sys.stdin)["ok"]; assert not r["missing"] and r["glyphs"][0]["commands"]'
+      - name: Package and check native consumers
+        run: |
+          tools/package-native.sh native-packages
+          unpacked="$(mktemp -d)"
+          tar -xzf native-packages/linefont-linux-x86_64.tar.gz -C "$unpacked"
+          cmake -S examples/integration/cpp -B "$unpacked/build" -Dlinefont_DIR="$unpacked"
+          cmake --build "$unpacked/build"
+          "$unpacked/build/layout" examples/SingleGlyph.lint
+          python3 -m venv "$unpacked/python"
+          "$unpacked/python/bin/pip" install --no-index native-packages/*.whl
+          "$unpacked/python/bin/python" examples/integration/layout.py examples/conformance
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linefont-native-linux-x86_64
+          path: native-packages/
       - name: Publish verified release assets
         if: github.event_name == 'push' && github.ref == 'refs/tags/v0.0.2'
         env:

@@ -149,3 +149,56 @@ in **font units**. The result is a validated `linefont/1` font with the chosen
 path vocabulary, original metrics, anchors, aliases and composites. The input
 retains its authored curves. Native callers use `convert_font` or send
 `{"op":"convert","font":...,"output":"beziers","tolerance":0.01}`.
+
+## Python (Linux x86-64)
+
+The `003` CI workflow builds a wheel for glibc-based Linux x86-64 using Ubuntu
+24.04. Use a compatible system with Python 3.9 or later. Download and unpack
+the `linefont-native-linux-x86_64` artifact from a successful CI run, then install
+the wheel in your environment. The wheel includes the native core.
+
+```sh
+python -m pip install --no-index ./linefont-0.0.3-py3-none-linux_x86_64.whl
+```
+
+```python
+from linefont import Engine
+
+engine = Engine.from_files("examples/SingleGlyph.lint")
+result = engine.layout("Ґ😀", 4)
+print(result["glyphs"][0]["commands"], result["missing"])
+```
+
+On the same build platform, developers can create the packages locally with
+`cargo build --manifest-path core/Cargo.toml --locked --release` followed by
+`tools/package-native.sh /tmp/linefont-native`.
+
+## CMake (Linux x86-64)
+
+Extract the native archive from the same CI artifact. Point
+`linefont_DIR` at the directory containing `linefontConfig.cmake`.
+C consumers link `linefont::linefont` and include `linefont.h`. For
+typed stroke commands, ranges and diagnostic codes in C++17, request the
+`cpp` component, link `linefont::cpp` and include `linefont.hpp`.
+The C++ adapter uses json-c and pkg-config.
+
+```sh
+cmake -S examples/integration/cpp -B /tmp/linefont-cpp -Dlinefont_DIR=/path/to/extracted
+cmake --build /tmp/linefont-cpp
+/tmp/linefont-cpp/layout examples/SingleGlyph.lint
+```
+
+[Guide for writing a binding](binding-authors.md)
+
+## Batch CLI
+
+Install the 0.0.3 npm archive from a checkout. Pass a UTF-8 file path or
+pipe text on stdin. Repeat `--font` to add fallback fonts in order.
+Height is in millimetres. SVG uses physical dimensions and open centerlines.
+JSON contains stroke commands, advances, carets and missing graphemes.
+Input errors go to stderr and return a nonzero status.
+
+```sh
+npx --no-install linefont-layout --font font.lint --height 4 inscription.txt > inscription.svg
+printf 'Ґ\nҐ' | npx --no-install linefont-layout --font font.lint --height 4 --format json
+```

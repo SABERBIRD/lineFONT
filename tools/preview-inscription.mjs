@@ -1,5 +1,7 @@
+import { layout } from "../dist/index.js";
+
 // Geometry and SVG dimensions share millimetres, including the stroke and margins.
-function layoutInscription(fonts, text, options) {
+export function layoutInscription(fonts, text, options) {
   const { stroke, margin, ...layoutOptions } = options;
   const result = layout(fonts, { ...layoutOptions, text, top: 0 });
   const { x, y, width, height } = result.bounds;
@@ -13,7 +15,7 @@ function layoutInscription(fonts, text, options) {
   };
 }
 
-function inscriptionSvg({ commands, stroke, x, y, width, height }) {
+export function inscriptionSvg({ commands, stroke, x, y, width, height }) {
   const path = commands.map(({ code, values }) => code + values.join(" "))
     .join(" ");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}mm" height="${height}mm" viewBox="${x} ${y} ${width} ${height}"><path d="${path}" fill="none" stroke="#142b35" stroke-width="${stroke}" stroke-linejoin="round" stroke-linecap="round"/></svg>`;

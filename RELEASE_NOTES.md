@@ -5,6 +5,7 @@
 - Imports edited SVG glyph paths into the offline viewer and exports validated .lint fonts.
 - Exports flattened fonts while preserving resolved glyph advances and anchors.
 - Adds a typed Rust layout request constructor and external integration examples.
+- Adds a multiline batch layout CLI with SVG and JSON output, a Linux x86-64 Python wheel and a CMake package with a C++ adapter.
 
 ## 0.0.2
 

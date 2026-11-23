@@ -30,6 +30,7 @@
   "bin": {
     "linefont-validate": "./tools/validate-linefont.mjs",
     "linefont-preview": "./tools/preview-linefont.mjs",
+    "linefont-layout": "./tools/layout-linefont.mjs",
     "linefont-coverage": "./tools/coverage-linefont.mjs"
   },
   "files": [
@@ -40,12 +41,14 @@
     "examples/",
     "spec/",
     "docs/",
-    "core/include/linefont.h",
+    "core/include/",
+    "bindings/python/linefont/__init__.py",
     "core/rust-toolchain.toml",
     "CONTRIBUTING.md",
     "RELEASE_NOTES.md",
     "ROADMAP.md",
     "tools/validate-linefont.mjs",
+    "tools/layout-linefont.mjs",
     "LICENSES/",
     "THIRD_PARTY.txt",
     "tools/preview-*.mjs",

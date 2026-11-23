@@ -10,9 +10,6 @@ order within each section. Releases are created on request. Changes to the
 
 ## Application integration
 
-- [ ] **39. Guide for binding authors.** Show how to choose between Rust, WASM and C ABI using one adapter. Cover buffer ownership, errors and switching between two documents. Compare strokes, UTF-16 positions and missing clusters against item 17's fixtures.
-- [ ] **27. C and Python bindings.** A Linux C example exists. Decide supported operating systems and architectures. Provide C/C++ binaries, headers and a CMake target, plus typed access to strokes and errors. Provide Python wheels containing the core. Run a first layout on each supported platform without a local core build.
-- [ ] **40. Batch CLI.** Read text from a file or stdin, take a font and height, and return inscription SVG or stroke JSON. Test SVG units, multiline input and a nonzero exit status for an invalid font.
 - [ ] **38. Release integration checks.** Run documented examples in clean consumer projects. JS installs the tarball, Rust consumes the crate and C compiles against public headers and the library. Check glyph counts, missing clusters and strokes, plus the version table and instructions against tagged artifacts.
 - [ ] **41. Integration support matrix.** For each released package, document language, OS, architecture, installation command and verified minimal example. Update the table based on clean installation checks (38).
 
@@ -43,6 +40,9 @@ order within each section. Releases are created on request. Changes to the
 
 ## Completed
 
+- [x] **39. Guide for binding authors.** Documented Rust, WASM and C ABI entry points, buffer ownership, diagnostics and document switching. The installed Python adapter runs the shared layout fixtures.
+- [x] **27. C, C++ and Python packages.** CI builds and tests Ubuntu 24.04 Linux x86-64 artifacts. The archive provides CMake targets and a typed C++ adapter. The wheel includes the native core.
+- [x] **40. Batch CLI.** Reads UTF-8 text from a file or stdin and emits millimetre SVG or layout JSON. Tests cover multiline layout, physical SVG dimensions and faulty fonts.
 - [x] **22. SVG import.** Import path geometry and nested transforms in font units, convert to M/L/C and report arc approximation and outline risks. Preview the pen path and export a validated .lint. Flat export resolves aliases and composites while retaining effective advances.
 - [x] **25. Font author guide.** Includes a font catalog, licenses and an end-to-end SVG template, Ґ edit, composition proof and PR workflow.
 - [x] **26. External application quickstarts.** Added a typed Rust request with defaults and a packageable Cargo crate, plus verified clean-project examples for JS, Rust and C.
