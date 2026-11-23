@@ -1,6 +1,6 @@
 # Inspect a font
 
-The preview CLI is part of the unreleased 0.0.2 checkout. From the repository root, run `npm ci` and `npm run build` with Node 22.12+. Try the bundled font first.
+The preview CLI is included in release 0.0.2. From the repository root, run `npm ci` and `npm run build` with Node 22.12+. Try the bundled font first.
 
 ```sh
 npm run --silent font:preview -- --html fonts/bagLING-UA-EN/bagLING-UA-EN.lint > specimen.html
@@ -64,3 +64,15 @@ enabled. A static message remains visible when scripts are disabled. The current
 CI browser check exercises a 320 px touch viewport and a desktop viewport in Chrome.
 Real-device Android and iOS file selection, zoom, clipboard, and SVG download
 remain pending physical verification.
+
+
+## Inscription
+
+Open **Inscription**, paste multiline text or choose a UTF-8 .txt file, then
+select **Render inscription**. The active primary font is used. Set cap height,
+line height, letter spacing, stroke width and margin in millimetres. Leave wrap
+width empty to use the line breaks in the text.
+
+Download the rendered inscription as **SVG** or a **single-page vector PDF**.
+Import the SVG at original size or print the PDF at 100% to preserve its scale.
+The status lists unsupported characters before export.

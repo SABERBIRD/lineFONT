@@ -32,6 +32,8 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
     binding,
     wasm,
     viewer,
+    inscription,
+    glyphTemplate,
     catalog,
     notices,
     license,
@@ -44,6 +46,8 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
     read("../dist/index.js"),
     read("../dist/wasm.mjs"),
     read("./preview-browser.mjs"),
+    read("./preview-inscription.mjs"),
+    read("./preview-glyph-template.mjs"),
     read("./preview-language-samples.json"),
     read("./preview-language-samples.NOTICE.txt"),
     read("../LICENSES/Apache-2.0.txt"),
@@ -74,11 +78,34 @@ export async function htmlPreview(font, sample, sheet, page = 1) {
 ${stylesheet}
 </style>
 <p id="script-status" role="status">Interactive previews require JavaScript. Open this downloaded HTML in a browser with JavaScript enabled. The glyph sheet is available below.</p>
-<header class="mast"><strong>line<span>FONT</span></strong><nav aria-label="Workspace"><a href="#sample-workspace">Sample</a><a href="#glyphs">Glyphs</a></nav><select id="ui-language" aria-label="Interface language / Мова інтерфейсу"><option value="en">English</option><option value="uk">Українська</option></select></header>
+<header class="mast"><strong>line<span>FONT</span></strong><nav aria-label="Workspace"><a href="#sample-workspace">Sample</a><a href="#inscription">Inscription</a><a href="#glyphs">Glyphs</a></nav><select id="ui-language" aria-label="Interface language / Мова інтерфейсу"><option value="en">English</option><option value="uk">Українська</option></select></header>
 <main><header class="font-header">
   <h1 id="font-name">${escapeXml(font.name)}</h1>
   <p id="font-metrics">${escapeXml(font.version)} · cap height ${font.metrics.capHeight} · baseline ${font.metrics.baseline} · default advance ${font.metrics.defaultAdvance}</p>
 </header>
+<section id="inscription">
+<details><summary>Inscription</summary>
+  <form id="inscription-form">
+    <label for="inscription-text">Inscription text</label>
+    <textarea id="inscription-text" rows="6" maxlength="100000" spellcheck="false"></textarea>
+    <label for="inscription-file">Open a text file</label>
+    <input id="inscription-file" type="file" accept=".txt,text/plain">
+    <div class="inscription-metrics">
+      <label>Capital height (mm)<input name="height" type="number" min="0.01" step="any" value="4" required></label>
+      <label>Line height (mm)<input name="lineHeight" type="number" min="0.01" step="any" value="7.2" required></label>
+      <label>Letter spacing (mm)<input name="letterSpacing" type="number" min="0" step="any" value="0" required></label>
+      <label>Wrap width (mm, optional)<input name="wrapWidth" type="number" min="0.01" step="any"></label>
+      <label>Stroke width (mm)<input name="stroke" type="number" min="0.01" step="any" value="0.2" required></label>
+      <label>Margin (mm)<input name="margin" type="number" min="0" step="any" value="2" required></label>
+    </div>
+    <button type="submit">Render inscription</button>
+    <button type="button" id="save-inscription" disabled>Download inscription SVG</button>
+    <button type="button" id="save-inscription-pdf" disabled>Download inscription PDF</button>
+  </form>
+  <p id="inscription-status" role="status"></p>
+  <div id="inscription-preview" class="scroll-area" tabindex="0" role="region" aria-label="Inscription preview"></div>
+</details>
+</section>
 <section id="sample-workspace" aria-label="Sample"><div class="workspace">
 <div class="proof"><h2>Text preview</h2>
   <div id="preview-scroll" class="scroll-area" tabindex="0" role="region" aria-label="Primary font sample"><svg id="phrase-preview" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Font sample"></svg></div>
@@ -125,6 +152,17 @@ ${stylesheet}
 </div><div>  <label for="detail-glyph">Inspect a glyph</label>
   <select id="detail-glyph"><option value="">Choose a glyph</option></select>
 </div></div>
+<details>
+  <summary>Glyph SVG template</summary>
+  <form id="glyph-template-form">
+    <label for="glyph-template-font">Template font</label>
+    <select id="glyph-template-font" name="templateFont"><option value="primary">Primary font</option><option value="comparison">Comparison font</option></select>
+    <label for="glyph-template-symbol">Character or Unicode code</label>
+    <input id="glyph-template-symbol" value="Ґ" required>
+    <button type="submit">Download glyph template</button>
+    <p id="glyph-template-status" role="status"></p>
+  </form>
+</details>
   <div class="pager">
   <button id="glyph-prev" type="button">Previous page</button>
   <span id="glyph-page" role="status"></span>
@@ -166,6 +204,8 @@ const inkBounds = commands => getRuntime().inkBounds(commands);
 const layout = (...args) => getRuntime().layout(...args);
 ${browserSource(specimenSource)}
 ${browserSource(detailSource)}
+${browserSource(inscription)}
+${browserSource(glyphTemplate)}
 ${viewer}
 })();
 </script>

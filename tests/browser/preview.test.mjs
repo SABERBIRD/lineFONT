@@ -99,6 +99,91 @@ test(
       frameId: frameTree.frame.id,
       html,
     });
+    const template = await evaluate(`(async () => {
+      let blob;
+      const originalUrl = URL.createObjectURL;
+      const originalClick = HTMLAnchorElement.prototype.click;
+      URL.createObjectURL = (value) => { blob = value; return "blob:fixture"; };
+      HTMLAnchorElement.prototype.click = () => {};
+      try {
+        const form = document.querySelector("#glyph-template-form");
+        const input = document.querySelector("#glyph-template-symbol");
+        input.value = "U+D800";
+        form.requestSubmit();
+        const rejected = !blob && !!document.querySelector("#glyph-template-status").textContent;
+        input.value = "U+1F642";
+        form.requestSubmit();
+        const xml = new DOMParser().parseFromString(await blob.text(), "image/svg+xml");
+        return {
+          rejected,
+          metadata: JSON.parse(xml.querySelector("metadata").textContent),
+          baseline: xml.querySelector("#baseline").getAttribute("d"),
+          paths: xml.querySelector("#linefont-glyph").children.length,
+        };
+      } finally {
+        URL.createObjectURL = originalUrl;
+        HTMLAnchorElement.prototype.click = originalClick;
+      }
+    })()`);
+    assert(template.rejected);
+    assert.equal(template.metadata.glyph, "1F642");
+    assert.equal(template.metadata.font.id, font.id);
+    assert.equal(template.metadata.metrics.advance, font.metrics.defaultAdvance);
+    assert.equal(template.metadata.metrics.capHeight, font.metrics.capHeight);
+    assert.match(template.baseline, new RegExp(" " + font.metrics.baseline + " H"));
+    assert.equal(template.paths, 0);
+
+    const inscription = await evaluate(`(async () => {
+      const form = document.querySelector("#inscription-form");
+      form.closest("details").open = true;
+      document.querySelector("#inscription-text").value = "Ґ\\n".repeat(260) + "Ґ";
+      form.requestSubmit();
+      const svg = document.querySelector("#inscription-preview svg");
+      const downloads = [];
+      const originalUrl = URL.createObjectURL;
+      const originalClick = HTMLAnchorElement.prototype.click;
+      URL.createObjectURL = (blob) => { downloads.push(blob); return "blob:fixture"; };
+      HTMLAnchorElement.prototype.click = () => {};
+      try {
+        document.querySelector("#save-inscription").click();
+        document.querySelector("#save-inscription-pdf").click();
+      } finally {
+        URL.createObjectURL = originalUrl;
+        HTMLAnchorElement.prototype.click = originalClick;
+      }
+      const [exportedSvg, pdf] = await Promise.all(downloads.map((blob) => blob.text()));
+      document.querySelector("#inscription-text").value = "Ґ😀";
+      form.requestSubmit();
+      return {
+        pdf,
+        exportedSvg,
+        width: svg.getAttribute("width"),
+        height: svg.getAttribute("height"),
+        moves: svg.querySelector("path").getAttribute("d").match(/M/g).length,
+        status: document.querySelector("#inscription-status").textContent,
+        canDownload: !document.querySelector("#save-inscription").disabled,
+      };
+    })()`);
+    assert.match(inscription.width, /mm$/);
+    assert(parseFloat(inscription.height) > 1800);
+    assert.equal(inscription.moves, 261);
+    assert.match(inscription.status, /U\+1F600/);
+    assert(inscription.canDownload);
+    assert.match(inscription.exportedSvg, /height="[0-9.]+mm"/);
+    assert.match(inscription.pdf, /\/Count 1\b/);
+    assert.equal(inscription.pdf.match(/ m$/gm).length, 261);
+    assert.equal(inscription.pdf.match(/ l$/gm).length, 783);
+    assert.doesNotMatch(inscription.pdf, /^h$/m);
+    const [, widthPt, heightPt, unit] = inscription.pdf.match(
+      /\/MediaBox \[0 0 ([0-9.]+) ([0-9.]+)\] \/UserUnit ([0-9]+)/,
+    ).map(Number);
+    assert(Math.abs(widthPt * unit * 25.4 / 72 - parseFloat(inscription.width)) < 1e-6);
+    assert(Math.abs(heightPt * unit * 25.4 / 72 - parseFloat(inscription.height)) < 1e-6);
+    const xref = Number(inscription.pdf.match(/startxref\n([0-9]+)/)[1]);
+    assert.equal(inscription.pdf.slice(xref, xref + 4), "xref");
+
+    await evaluate('document.querySelector("#inscription details").open = false');
+
     const result = await evaluate(`(async () => {
     const picker = document.querySelector('#detail-glyph');
     picker.value = '0042'; picker.dispatchEvent(new Event('change'));

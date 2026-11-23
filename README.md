@@ -13,7 +13,7 @@ lineFONT lays out single-line vector fonts for technical drawings, plotters and 
 | Package | Accepted `.lint` format identifiers | Available features |
 | --- | --- | --- |
 | [0.0.1 release](https://github.com/SABERBIRD/lineFONT/releases/tag/v0.0.1) | `linefont/1` | Layout with M/L/C strokes, validator, two bundled fonts |
-| 0.0.2 (unreleased checkout) | `linefont/1`, `linefont/0.0.2` | Also supports Q/T/S/A curves, polyline output, coverage reports and the preview CLI |
+| [0.0.2 release](https://github.com/SABERBIRD/lineFONT/releases/tag/v0.0.2) | `linefont/1`, `linefont/0.0.2` | Also supports Q/T/S/A curves, polyline output, coverage reports and the preview CLI |
 
 A font's own `version` describes the artwork. Its `format` selects the file syntax. [Release notes](RELEASE_NOTES.md) · [Format specification](spec/FORMAT.md) · [Roadmap](ROADMAP.md)
 
@@ -22,7 +22,7 @@ A font's own `version` describes the artwork. Its `format` selects the file synt
 Install the released package with Node 22.12 or newer. Run the following JavaScript as an ES module.
 
 ```sh
-npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.1/saberbird-linefont-0.0.1.tgz
+npm install https://github.com/SABERBIRD/lineFONT/releases/download/v0.0.2/saberbird-linefont-0.0.2.tgz
 ```
 
 ```js

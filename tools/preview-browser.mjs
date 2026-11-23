@@ -3,7 +3,7 @@ const t = (label) => translate(localeControl.value, label);
 // Capture interface text once. User input, font names and glyph content are outside this set.
 const labels = [];
 for (const element of document.querySelectorAll(
-  "label,button,h2,summary,legend,nav a,#sample-type option,#language > option",
+  "label,button,h2,summary,legend,nav a,#sample-type option,#language > option,#glyph-template-font option",
 )) {
   for (const node of element.childNodes) {
     if (node.nodeType === Node.TEXT_NODE && node.textContent.trim())
@@ -37,8 +37,10 @@ const {
 } = JSON.parse(document.getElementById("preview-data").textContent);
 let font = initialFont;
 let fonts = [font];
+const refreshInscription = setupInscription(() => fonts, t, errorDetail);
 let compareFont = null;
 let compareFonts = [];
+setupGlyphTemplate((choice) => choice === "comparison" ? compareFont : font, t);
 const comparison = document.getElementById("comparison");
 const comparisonPreview = document.getElementById("comparison-preview");
 const comparisonCoverage = document.getElementById("comparison-coverage");
@@ -386,6 +388,7 @@ bindFontInput(
     const sheet = specimen(candidate, "", 1, "", localeControl.value);
     font = candidate;
     fonts = [font];
+    refreshInscription();
     glyphSearch.value = "";
     currentPage = 1;
     glyphSheet.innerHTML = sheet;
@@ -550,6 +553,7 @@ function applyLanguage() {
       "";
   renderGlyphs();
   renderDetail();
+  refreshInscription();
 }
 localeControl.addEventListener("change", applyLanguage);
 if (navigator.language?.startsWith("uk")) {

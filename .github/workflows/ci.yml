@@ -4,12 +4,6 @@ on:
     branches: [main]
     tags: ['v*']
   pull_request:
-  workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish a release for the selected version tag
-        type: boolean
-        default: false
 permissions:
   contents: read
 jobs:
@@ -61,8 +55,27 @@ jobs:
           grep -q '<option value="en_Latn">' specimen.html
           grep -q '<option value="el_Grek">' specimen.html
           node --input-type=module -e "import { layout } from '@saberbird/linefont'; import font from '@saberbird/linefont/fonts/bagling-ua-en'; if (!layout([font], { text: 'ҐA', height: 4, lineHeight: 7.2, top: 1.2 }).glyphs.length) process.exit(1)"
+      - name: Check Rust and native integrations
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libjson-c-dev
+          repo="$PWD"
+          consumer="$(mktemp -d)"
+          cargo +1.100.0 new --edition 2021 --name linefont_demo "$consumer/rust"
+          cd "$consumer/rust"
+          cargo +1.100.0 add linefont --path "$repo/core"
+          cargo +1.100.0 add serde_json@1
+          cp "$repo/examples/integration/layout.rs" src/main.rs
+          cargo +1.100.0 run --quiet -- "$repo/examples/SingleGlyph.lint" | grep -Fx 'glyphs=1 missing=0'
+          cd "$consumer"
+          tar -czf native.tar.gz -C "$repo/core/target/release" liblinefont.so -C "$repo/core/include" linefont.h
+          mkdir native
+          tar -xzf native.tar.gz -C native
+          cc -std=c11 "$repo/examples/integration/layout.c" -Inative -Lnative \
+            -Wl,-rpath,"$consumer/native" -llinefont $(pkg-config --cflags --libs json-c) -o layout
+          ./layout "$repo/examples/SingleGlyph.lint" | python3 -c 'import json,sys; r=json.load(sys.stdin)["ok"]; assert not r["missing"] and r["glyphs"][0]["commands"]'
       - name: Publish verified release assets
-        if: github.event_name == 'workflow_dispatch' && inputs.publish && startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && github.ref == 'refs/tags/v0.0.2'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

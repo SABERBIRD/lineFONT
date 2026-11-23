@@ -283,3 +283,26 @@ pre {
 #ui-language {
   width: auto;
 }
+
+#inscription {
+  margin-block: 1rem;
+}
+#inscription-text {
+  display: block;
+  width: 100%;
+}
+.inscription-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: .75rem;
+  margin-block: .75rem;
+}
+.inscription-metrics input {
+  display: block;
+  width: 100%;
+}
+#inscription-preview svg {
+  display: block;
+  max-width: none;
+  background: white;
+}

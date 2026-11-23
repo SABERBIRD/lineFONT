@@ -4,7 +4,7 @@
 
 Use Node 22.12+ or a browser bundler with ES modules and WebAssembly. The package includes TypeScript declarations and a synchronous WASM engine. Import each bundled font by its public subpath. For an external .lint file, pass its UTF-8 text to `parseFont`. Keep the same font stack while editing text.
 
-For **released 0.0.1**, follow the [README installation and first layout](../README.md#first-layout-in-javascript). To try the **unreleased 0.0.2 checkout**, run these commands from its root. The checkout includes generated fonts and WASM.
+For **released 0.0.2**, follow the [README installation and first layout](../README.md#first-layout-in-javascript). To try the **0.0.2 checkout**, run these commands from its root. The checkout includes generated fonts and WASM.
 
 ```sh
 npm ci
