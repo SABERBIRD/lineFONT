@@ -22,6 +22,8 @@ order within each section. Releases are created on request. Changes to the
 - [ ] **38. Release integration checks.** Run documented examples in clean consumer projects. JS installs the tarball, Rust consumes the crate and C compiles against public headers and the library. Check glyph counts, missing clusters and strokes, plus the version table and instructions against tagged artifacts.
 - [ ] **41. Integration support matrix.** For each released package, document language, OS, architecture, installation command and verified minimal example. Update the table based on clean installation checks (38).
 
+- [ ] **42. Shaped layout.** Place text into line slots between obstacles and along a path (`on`, `above`, `below`) with overflow reporting. Draft: [shaped layout](spec/proposals/shaped-layout.md). Prototype in bagLING first, then fixtures (17) and the ABI boundary (36).
+
 ## Compatibility and maintenance
 
 - [ ] **20. Version compatibility.** Cover geometry, metrics, unknown fields and document reproduction.
